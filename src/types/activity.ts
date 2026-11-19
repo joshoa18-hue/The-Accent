@@ -1,4 +1,4 @@
-import type { SchoolSlug } from "./school";
+import type { SchoolIconName, SchoolSlug } from "./school";
 
 export type TaskStatus = "not_started" | "in_progress" | "completed";
 
@@ -34,6 +34,16 @@ export interface LearningActivity {
   /** 0–100 */
   progressPercent: number;
   lastStudiedAt: string;
+}
+
+/**
+ * A learning activity joined with the names the UI needs to display it.
+ * The data layer builds this — like a SQL JOIN — so components never
+ * have to look courses up themselves.
+ */
+export interface LearningActivityView extends LearningActivity {
+  school: { slug: SchoolSlug; name: string; shortName: string; icon: SchoolIconName };
+  course: { id: string; title: string };
 }
 
 export type AchievementStatus = "earned" | "locked";

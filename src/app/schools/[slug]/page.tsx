@@ -19,7 +19,7 @@ export async function generateMetadata({ params }: PageProps<"/schools/[slug]">)
 }
 
 /**
- * SCHOOL PAGE — foundation version (Milestone 1, checkpoint 1).
+ * SCHOOL PAGE — one file serves all eight schools.
  *
  * Note that this component is NOT async and does not await `params`.
  * With Partial Prefetching, every link to /schools/<anything> preloads one
