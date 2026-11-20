@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Panel } from "@/components/ui/Panel";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SampleDataNotice } from "@/components/ui/SampleDataNotice";
+import { ArrowLink } from "@/components/ui/ArrowLink";
+import { getCurrentUser } from "@/lib/auth/session";
 import { getCharacterSummary } from "@/lib/data/character";
 import { getSchoolBySlug } from "@/lib/data/schools";
 import { combineSources } from "@/lib/data/source";
@@ -24,17 +26,21 @@ import { formatNumber } from "@/lib/utils";
  */
 export async function SchoolDetails({ params }: Pick<PageProps<"/schools/[slug]">, "params">) {
   const { slug } = await params;
-  const [schoolResult, character] = await Promise.all([getSchoolBySlug(slug), getCharacterSummary()]);
+  const [schoolResult, user] = await Promise.all([getSchoolBySlug(slug), getCurrentUser()]);
   const school = schoolResult.data;
 
   // Unknown slug (e.g. a typo in the address bar) → show the 404 page.
   if (!school) notFound();
 
+  // School pages are PUBLIC. Learner data is only loaded for a signed-in
+  // learner; for everyone else the mastery panel invites them to sign in.
+  const character = user ? await getCharacterSummary() : null;
+
   const courses = school.categories.flatMap((category) => category.courses);
   const lessons = courses.reduce((sum, course) => sum + plannedLessonCount(course), 0);
-  const mastery = character.data.mastery.find((m) => m.schoolSlug === school.slug);
+  const mastery = character?.data.mastery.find((m) => m.schoolSlug === school.slug);
   const attribute = ATTRIBUTES.find((a) => a.key === school.primaryAttribute);
-  const source = combineSources(schoolResult.source, character.source);
+  const source = character ? combineSources(schoolResult.source, character.source) : schoolResult.source;
 
   return (
     <div className="space-y-6">
@@ -129,12 +135,19 @@ export async function SchoolDetails({ params }: Pick<PageProps<"/schools/[slug]"
                   </>
                 )}
               </>
-            ) : (
+            ) : user ? (
               <>
                 <Badge tone="muted">Unranked</Badge>
                 <p className="mt-3 text-sm text-mist">
                   You haven&apos;t earned XP in this school yet. Mastery ranks begin with your first completed lesson.
                 </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-mist">Sign in to track your mastery in this school as you complete lessons.</p>
+                <ArrowLink href={routes.login(routes.school(school.slug))} className="mt-3">
+                  Sign in
+                </ArrowLink>
               </>
             )}
           </Panel>
