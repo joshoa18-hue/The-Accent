@@ -42,12 +42,13 @@ Each layer depends only on the layers below it. Components never import sample d
 
 ## 3. Server and Client Components
 
-Almost everything is a **Server Component**: it renders on the server or at build time and sends no JavaScript to the browser. Only two components are Client Components (`"use client"`):
+Almost everything is a **Server Component**: it renders on the server or at build time and sends no JavaScript to the browser. Only three components are Client Components (`"use client"`):
 
 | Component | Why it needs the browser |
 |---|---|
 | `NavLink` | Reads the current URL with `usePathname()` to highlight the active link. |
 | `CourseHashOpener` | Reads `window.location.hash` and opens the matching `<details>` element. |
+| `LoginForm` | Shows the pending and error states of the sign-in Server Action (`useActionState`). The form still posts without JavaScript. |
 
 Interactive behaviour that HTML already provides stays native. Course outlines are `<details>`/`<summary>`, so keyboard support, screen-reader states and the open/close behaviour all cost zero JavaScript.
 
@@ -94,7 +95,26 @@ xp_transactions ─► sumXp() ─► total XP ─► getLevelProgress(CHARACTER
 - **Request data must sit inside `<Suspense>`.** Anything that reads the URL (`params`, `usePathname`) must be inside a Suspense boundary, so the static shell can be served instantly:
   - `schools/[slug]/page.tsx` is a non-async page that renders `<Suspense fallback={<SchoolDetailsSkeleton/>}><SchoolDetails params={params}/></Suspense>`. The `params` promise is only awaited *inside* `SchoolDetails`.
   - `Sidebar` and `MobileNav` wrap the `NavLink` version in `<Suspense>` with a fallback that uses `StaticNavLink`, which has no active highlighting. The fallback is visually identical apart from the highlight, so nothing shifts.
-- **Known trade-off: an unknown school slug returns HTTP 200, not 404.** Because the school content streams inside Suspense, the response headers have already been sent with status 200 by the time `notFound()` runs. Next.js still renders the not-found UI and adds `<meta name="robots" content="noindex">`, so search engines don't index the page. Unknown top-level routes such as `/nowhere` do return a real 404. If a true 404 status matters later, a Proxy (`proxy.ts`) can check the slug against the known list before rendering. That's tracked in the roadmap.
+- **Unknown school slugs return a real 404 (fixed in Milestone 2).** On its own, `notFound()` inside Suspense can only produce status 200, because the headers were already sent when streaming started. `src/proxy.ts` now checks the slug against the catalogue *before* rendering and rewrites unknown ones to a path no route handles, so the response is a genuine 404.
+- **Private pages** (`/`, `/character`) render their content inside `<Suspense>` because they read the session (cookies). The static shell (sidebar, layout) still loads instantly.
+- **`"use cache: private"`** wraps `getCurrentUser()`. Verifying a token compares its expiry with the clock, which can't be prerendered. A private cache runs at request time, is shared only within one request, and is never stored in a server-wide cache.
+
+## 6a. Authentication
+
+```
+Proxy (every request)      refresh session cookies · optimistic redirects · school 404s
+   │
+Page / Server Action       requireUser() / getCurrentUser()   ← src/lib/auth/session.ts (Data Access Layer)
+   │
+Supabase (as that user)    Row Level Security returns only that user's rows
+```
+
+- **Magic-link sign-in.** `sendSignInLink` (Server Action) → email with a one-time `token_hash` → `/auth/confirm` (Route Handler) → `verifyOtp` → session cookies → redirect to `safeNextPath(...)`.
+- **Server-only Supabase.** `SUPABASE_URL` / `SUPABASE_PUBLISHABLE_KEY` have no `NEXT_PUBLIC_` prefix, and the modules that use them import `server-only`. `readSupabaseEnv()` refuses secret and service-role keys.
+- **Tokens are verified, not trusted.** The server uses `auth.getClaims()`, which checks the signature. `getSession()` is never used on the server.
+- **Open-redirect protection.** Every "where next" value goes through `safeNextPath()`, which allows only paths on this site.
+- **No account enumeration.** The sign-in form gives the same reply whether or not an address has an account.
+- **The Proxy is not the security boundary.** It only reads cookies. Every private page calls `requireUser()`, and the database enforces RLS regardless.
 
 ## 7. Styling
 
@@ -102,7 +122,7 @@ xp_transactions ─► sumXp() ─► total XP ─► getLevelProgress(CHARACTER
 - **Fonts** come from `next/font`. Inter is the body font and Cormorant Garamond the display font. Both are downloaded at build time and self-hosted, so visitors' browsers never contact Google.
 - **Accessibility:** a skip link, a visible gold `:focus-visible` ring, `aria-current` on active navigation, `role="progressbar"` with readable values, `<section aria-labelledby>` on every panel, status shown in words rather than only by colour or icon, and support for `prefers-reduced-motion`.
 
-## 8. Security posture (Milestone 1)
+## 8. Security posture
 
 | Measure | Where |
 |---|---|
@@ -110,9 +130,12 @@ xp_transactions ─► sumXp() ─► total XP ─► getLevelProgress(CHARACTER
 | `X-Powered-By` header removed | `poweredByHeader: false` |
 | No secrets in the repository. `.env*` is git-ignored except `.env.example`, which holds placeholders only. | `.gitignore` |
 | No client-side XP writes and no fake action buttons, enforced by tests | `DailyMissionList.test.tsx`, `CourseAccordion.test.tsx` |
-| Four runtime dependencies (next, react, react-dom, lucide-react) | `package.json` |
+| Seven runtime dependencies (next, react, react-dom, lucide-react, @supabase/supabase-js, @supabase/ssr, server-only) | `package.json` |
+| Row Level Security plus revoked privileges on every table, proven by 24 database tests | `supabase/migrations/`, `supabase/tests/` |
+| Supabase code runs only on the server; secret keys are refused | `src/lib/supabase/` |
+| Open-redirect protection and email validation, each unit-tested | `src/lib/auth/` |
 
-A Content-Security-Policy is deferred to Milestone 2, because it must list the Supabase domain. When server-only secrets arrive, the `server-only` package will guard the modules that use them.
+A Content-Security-Policy is planned for Milestone 2, checkpoint 3 (see ROADMAP.md).
 
 ## 9. PWA readiness
 

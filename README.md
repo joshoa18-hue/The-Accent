@@ -60,6 +60,14 @@ The app still runs on sample data without a database. To work on the database yo
 
 Ports are **55320–55329**, not Supabase's defaults, because Windows often reserves the 543xx range for WSL and Hyper-V.
 
+### Signing in locally
+
+1. Copy `.env.example` to `.env.local`, then put the **publishable** key from `npm run db:status` into `SUPABASE_PUBLISHABLE_KEY`.
+2. Run `npm run db:start` and `npm run dev`, then open http://localhost:3000. Private pages send you to `/login`.
+3. Enter any address, such as `you@example.test`. No real email is sent: open the mail catcher at **http://127.0.0.1:55324** and click the link.
+
+The dashboard and character pages need sign-in; the schools are public.
+
 ## Test procedure
 
 ### 1. Automated

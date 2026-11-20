@@ -2,6 +2,7 @@ import { Suspense, type ComponentType } from "react";
 import { NavIcon, SchoolIcon } from "@/components/icons/AppIcons";
 import { primaryNav } from "@/config/navigation";
 import type { School } from "@/types/school";
+import { AccountStatus } from "./AccountStatus";
 import { Logo } from "./Logo";
 import { StaticNavLink, type NavLinkProps } from "./NavAnchor";
 import { NavLink } from "./NavLink";
@@ -64,9 +65,11 @@ export function Sidebar({ schools }: { schools: School[] }) {
       <Suspense fallback={<SidebarNav schools={schools} LinkComponent={StaticNavLink} />}>
         <SidebarNav schools={schools} LinkComponent={NavLink} />
       </Suspense>
-      <p className="border-t border-charcoal-800 px-7 py-4 text-xs text-slate-dim">
-        Milestone 1 · Foundation
-      </p>
+      <div className="min-h-[4.25rem] border-t border-charcoal-800 px-4 py-3">
+        <Suspense fallback={null}>
+          <AccountStatus />
+        </Suspense>
+      </div>
     </aside>
   );
 }

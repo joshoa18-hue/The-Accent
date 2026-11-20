@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { AchievementList } from "@/components/character/AchievementList";
 import { AttributeList } from "@/components/character/AttributeList";
@@ -11,12 +12,18 @@ import { getAchievements } from "@/lib/data/activity";
 import { getCharacterSummary, getRecentXpTransactions } from "@/lib/data/character";
 import { getSchools } from "@/lib/data/schools";
 import { combineSources } from "@/lib/data/source";
+import { PageSkeleton } from "@/components/ui/PageSkeleton";
+import { requireUser } from "@/lib/auth/session";
+import { routes } from "@/lib/routes";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Character" };
 
 /** The character sheet: level, attributes, mastery, achievements and XP history. */
-export default async function CharacterPage() {
+async function CharacterContent() {
+  // Real check, next to the data. The Proxy's redirect is only a fast first pass.
+  await requireUser(routes.character());
+
   const [character, schools, achievements, history] = await Promise.all([
     getCharacterSummary(),
     getSchools(),
@@ -71,5 +78,17 @@ export default async function CharacterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Private page: reading the session needs the request's cookies, so the
+ * content renders inside <Suspense> and the static shell loads instantly.
+ */
+export default function CharacterPage() {
+  return (
+    <Suspense fallback={<PageSkeleton label="Loading your character" />}>
+      <CharacterContent />
+    </Suspense>
   );
 }
