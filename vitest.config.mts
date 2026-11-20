@@ -13,6 +13,6 @@ export default defineConfig({
     // simulated browser with a `// @vitest-environment jsdom` comment at the top.
     environment: "node",
     setupFiles: ["./vitest.setup.ts"],
-    include: ["src/**/*.test.{ts,tsx}"],
+    include: ["src/**/*.test.{ts,tsx}", "scripts/**/*.test.ts"],
   },
 });

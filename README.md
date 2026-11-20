@@ -44,6 +44,22 @@ Open http://localhost:3000. No environment variables are needed for Milestone 1.
 | `npm run test:watch` | Tests in watch mode |
 | `npm run check` | **All of the above in order.** Run before every commit. |
 
+### Local database (Milestone 2)
+
+The app still runs on sample data without a database. To work on the database you need **Docker Desktop** running (on Windows: installed for all users, with WSL 2).
+
+| Command | What it does |
+|---|---|
+| `npm run db:start` | Start a lean local Supabase stack: database, auth, API and email catcher |
+| `npm run db:start:studio` | The same plus **Studio** at http://127.0.0.1:55323. Needs more memory. |
+| `npm run db:stop` | Stop the stack. Data is kept. |
+| `npm run db:reset` | Rebuild the database from `supabase/migrations/` and `supabase/seed.sql` |
+| `npm run db:test` | Run the database security tests (pgTAP) |
+| `npm run db:seed` | Regenerate `supabase/seed.sql` from `src/content/` |
+| `npm run db:types` | Regenerate `src/types/database.ts` from the running database |
+
+Ports are **55320–55329**, not Supabase's defaults, because Windows often reserves the 543xx range for WSL and Hyper-V.
+
 ## Test procedure
 
 ### 1. Automated

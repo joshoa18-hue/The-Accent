@@ -1,6 +1,6 @@
 # Database Design (preliminary)
 
-> **Status: design only.** Nothing here has been created or run yet. It will be implemented in Milestone 2 as Supabase migrations, reviewed and tested before anything is applied to a real project. The SQL is illustrative and will change.
+> **Status: implemented locally (Milestone 2, checkpoint 1).** The SQL now lives in `supabase/migrations/`, which is the source of truth. This document explains the reasoning; where the two differ, the migrations win. Security tests: `supabase/tests/security.test.sql` (`npm run db:test`). Nothing has been applied to a hosted project.
 
 ## 1. Goals
 
@@ -101,7 +101,7 @@ create table lessons (
 - **Text ids** (`'tech-web-development'`) match the sample data and keep URLs readable. Catalogue rows are created by migrations, not users, so guessable ids are fine.
 - **`on delete restrict`** stops anyone deleting a course that learners have progress in.
 - **`xp_reward` lives on the lesson**, so the *server* decides how much XP a lesson is worth, never the browser.
-- `plannedLessons` in today's `CourseModule` type becomes `count(lessons)`.
+- **The catalogue's source of truth stays in TypeScript** (`src/content/`). `supabase/seed.sql` is *generated* from it (`npm run db:seed`), and a test fails if the two drift apart. As built, `course_modules` also has a `planned_lessons` column, and `achievements` and `task_templates` have `sort_order`, so the database mirrors the outline before any lessons exist.
 
 ### Personal
 
@@ -238,7 +238,9 @@ There are **no insert, update or delete policies** on `xp_transactions`, `lesson
 
 `(select auth.uid())` rather than a bare `auth.uid()` is Supabase's recommended form: it is evaluated once per query instead of once per row.
 
-The `profiles` update policy lets a user edit any column of their own row. Column-level `grant update (display_name, title)` will restrict this so `id` and `created_at` stay fixed.
+**Privileges are a second lock.** Supabase grants every new table to `anon` and `authenticated` by default, so the migration first runs `revoke all … from anon, authenticated`, then grants back only `select` (catalogue and own rows) and `update (display_name, title)` on `profiles`. Even if an RLS policy were written wrongly, a learner still couldn't insert XP or change `created_at`. **Anonymous visitors get no table access at all**; public pages read the catalogue from code.
+
+**Every future migration that adds a table must repeat this**: enable RLS, revoke from the API roles, then grant only what's needed. The first security test fails if a table is missing RLS.
 
 ## 5. Awarding XP safely
 

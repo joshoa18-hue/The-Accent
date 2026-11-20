@@ -1,2 +1,4 @@
 # Store all text files with LF line endings, whatever the operating system.
 * text=auto eol=lf
+src/types/database.ts linguist-generated=true
+supabase/seed.sql linguist-generated=true
