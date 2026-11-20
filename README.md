@@ -119,6 +119,7 @@ With `npm run db:start` running, use `npm run build && npm run start` (or `npm r
 | [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md) | The Supabase schema and security model (the SQL lives in `supabase/migrations/`) |
 | [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) | Rules for AI coding assistants working in this repo |
 | [docs/learning/](docs/learning/) | Step-by-step lessons explaining how each part was built |
+| [docs/WRITING_LESSONS.md](docs/WRITING_LESSONS.md) | How to add a new lesson to the curriculum |
 | [docs/reports/](docs/reports/) | Milestone development reports |
 
 ## Tech stack

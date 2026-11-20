@@ -8,8 +8,25 @@
  * directly with Node.
  */
 import type { Lesson } from "@/types/lesson";
+import { easyAndHard } from "./personal-habits/easy-and-hard.ts";
+import { spacesAndFreshStarts } from "./personal-habits/spaces-and-fresh-starts.ts";
 import { startSmall } from "./personal-habits/start-small.ts";
+import { surroundingsShapeChoices } from "./personal-habits/surroundings-shape-choices.ts";
 import { theHabitLoop } from "./personal-habits/the-habit-loop.ts";
 import { whatAHabitIs } from "./personal-habits/what-a-habit-is.ts";
+import { whatIsAnArgument } from "./strategy-critical-thinking/what-is-an-argument.ts";
+import { whyBinary } from "./tech-how-computers-work/why-binary.ts";
 
-export const catalogueLessons: readonly Lesson[] = [whatAHabitIs, theHabitLoop, startSmall];
+export const catalogueLessons: readonly Lesson[] = [
+  // Personal Development → Building Lasting Habits
+  whatAHabitIs,
+  theHabitLoop,
+  startSmall,
+  surroundingsShapeChoices,
+  easyAndHard,
+  spacesAndFreshStarts,
+  // Strategy & Critical Thinking → Critical Thinking Essentials
+  whatIsAnArgument,
+  // Technology, Computers & AI → How Computers Work
+  whyBinary,
+];

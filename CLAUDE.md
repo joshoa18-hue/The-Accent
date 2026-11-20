@@ -31,7 +31,7 @@ The project owner is learning web development through this project. For every su
 - `src/proxy.ts`: session refresh, optimistic redirects, real 404s for unknown schools.
 - `src/lib/progression/`: pure game rules (levels, ledger, attributes). Keep them pure and tested.
 - `src/components/`: display only. Props in, UI out. `"use client"` only when the browser is truly required.
-- `src/content/catalogue/lessons/`: lessons as typed blocks plus a quiz. Answer keys must never reach the browser: read lessons through `src/lib/data/lessons.ts` (`server-only`, `toPublicQuiz()`).
+- `src/content/catalogue/lessons/`: lessons as typed blocks plus a quiz (how to add one: `docs/WRITING_LESSONS.md`). Answer keys must never reach the browser: read lessons through `src/lib/data/lessons.ts` (`server-only`, `toPublicQuiz()`).
 - `src/lib/routes.ts`: build every internal URL here.
 - Anything reading `params`, `usePathname`, cookies or the session must be inside `<Suspense>` (Cache Components). See ARCHITECTURE.md §6.
 

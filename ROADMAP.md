@@ -62,5 +62,5 @@ Each milestone ends with working, tested software and a development report in [d
 | Development mode can show one stale load right after saving a profile (production verified correct) | None needed; dev-only cache behaviour |
 | The laptop's 3.4 GB of RAM can't run Docker and a production build at once | Stop Docker before `npm run build`, or add RAM |
 | No offline support (manifest only) | Milestone 3 |
-| Only 3 lessons are written (one module) | Write more lessons; the format and pipeline are ready |
+| 8 lessons written across 3 schools (two full habit modules, plus a first lesson in Critical Thinking and How Computers Work) | Keep writing; see docs/WRITING_LESSONS.md |
 | The quiz says which question is wrong, so guessing is possible | Optional: attempt limits or hiding which answer was wrong |
