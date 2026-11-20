@@ -22,6 +22,7 @@ function template(overrides: Partial<TaskTemplateRow>): TaskTemplateRow {
     unit: "missions",
     school_slug: null,
     sort_order: 0,
+    rule: "lessons_completed",
     ...overrides,
   };
 }

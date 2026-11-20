@@ -149,22 +149,19 @@ insert into public.course_modules (id, course_id, title, planned_lessons, sort_o
   ('personal-leadership-course-2', 'personal-leadership-course', 'Casting Vision', 3, 1),
   ('personal-leadership-course-3', 'personal-leadership-course', 'Servant Leadership', 3, 2);
 
-insert into public.achievements (id, title, description, xp_reward, sort_order) values
-  ('first-step', 'First Step', 'Complete your first lesson.', 0, 0),
-  ('three-schools', 'Wide Horizons', 'Study in three different schools.', 0, 1),
-  ('scholar-rank', 'Scholar''s Rank', 'Reach Scholar mastery in any school.', 0, 2),
-  ('polymath', 'Polymath', 'Earn XP in all eight schools.', 0, 3),
-  ('thirty-days', 'Steadfast', 'Study on 30 days in a row.', 0, 4),
-  ('level-twenty-five', 'The High Road', 'Reach character level 25.', 0, 5);
+insert into public.achievements (id, title, description, xp_reward, sort_order, rule, threshold) values
+  ('first-step', 'First Step', 'Complete your first lesson.', 0, 0, 'lessons_completed', 1),
+  ('three-schools', 'Wide Horizons', 'Complete lessons in three different schools.', 0, 1, 'schools_studied', 3),
+  ('scholar-rank', 'Scholar''s Rank', 'Reach Scholar mastery in any school.', 0, 2, 'school_xp', 900),
+  ('polymath', 'Polymath', 'Earn XP in all eight schools.', 0, 3, 'schools_with_xp', 8),
+  ('thirty-days', 'Steadfast', 'Complete a lesson on 30 days in a row.', 0, 4, 'streak_days', 30),
+  ('level-twenty-five', 'The High Road', 'Reach character level 25.', 0, 5, 'total_xp', 30000);
 
-insert into public.task_templates (id, kind, title, description, xp_reward, target, unit, school_slug, sort_order) values
-  ('daily-focus', 'daily', 'Study for 25 focused minutes', 'One uninterrupted session in any school.', 25, 1, 'missions', null, 0),
-  ('daily-review', 'daily', 'Review yesterday''s notes', 'Spaced review locks in what you learned.', 15, 1, 'missions', null, 1),
-  ('daily-proverbs', 'daily', 'Read one chapter of Proverbs', 'A daily chapter of practical wisdom.', 20, 1, 'missions', 'faith-scripture-wisdom', 2),
-  ('daily-writing', 'daily', 'Write a 150-word summary', 'Explain one idea you learned today in your own words.', 20, 1, 'missions', 'languages-communication', 3),
-  ('weekly-sessions', 'weekly', 'Complete study sessions', '', 100, 5, 'sessions', null, 0),
-  ('weekly-modules', 'weekly', 'Finish course modules', '', 150, 2, 'modules', null, 1),
-  ('weekly-schools', 'weekly', 'Study across different schools', '', 80, 3, 'schools', null, 2);
+insert into public.task_templates (id, kind, title, description, xp_reward, target, unit, school_slug, sort_order, rule) values
+  ('daily-one-lesson', 'daily', 'Complete a lesson', 'Pass any lesson''s quiz today.', 20, 1, 'lessons', null, 0, 'lessons_completed'),
+  ('daily-two-lessons', 'daily', 'Keep going: two lessons', 'Pass two lessons'' quizzes today.', 30, 2, 'lessons', null, 1, 'lessons_completed'),
+  ('weekly-three-lessons', 'weekly', 'Complete lessons', 'Pass three lessons this week.', 75, 3, 'lessons', null, 2, 'lessons_completed'),
+  ('weekly-one-module', 'weekly', 'Finish a module', 'Complete every lesson in a module this week.', 100, 1, 'modules', null, 3, 'modules_completed');
 
 insert into public.lessons (id, module_id, title, xp_reward, published, sort_order) values
   ('personal-habits-course-1-1', 'personal-habits-course-1', 'What a Habit Really Is', 40, true, 1),

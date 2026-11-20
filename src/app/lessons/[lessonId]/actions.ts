@@ -4,7 +4,7 @@ import { updateTag } from "next/cache";
 import { getCurrentUser } from "@/lib/auth/session";
 import { LEARNER_DATA_TAG } from "@/lib/data/cache-tags";
 import { getLessonPage, getQuizExplanations } from "@/lib/data/lessons";
-import { parseCompletionResult, readQuizAnswers, type QuizAnswers } from "@/lib/lessons/quiz";
+import { parseCompletionResult, readQuizAnswers, type QuizAnswers, type Reward } from "@/lib/lessons/quiz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type QuizState =
@@ -12,7 +12,15 @@ export type QuizState =
   | { status: "error"; message: string; answers: QuizAnswers }
   | { status: "incomplete"; unanswered: string[]; answers: QuizAnswers }
   | { status: "retry"; wrong: string[]; answers: QuizAnswers }
-  | { status: "passed"; awarded: boolean; xp: number; explanations: Record<string, string>; answers: QuizAnswers };
+  | {
+      status: "passed";
+      awarded: boolean;
+      xp: number;
+      /** Missions, objectives and achievements the database granted alongside this lesson. */
+      rewards: Reward[];
+      explanations: Record<string, string>;
+      answers: QuizAnswers;
+    };
 
 /**
  * SERVER ACTION: submit a lesson's quiz.
@@ -58,6 +66,7 @@ export async function submitQuiz(_previous: QuizState, formData: FormData): Prom
     status: "passed",
     awarded: result.awarded,
     xp: result.xp,
+    rewards: result.rewards,
     explanations: await getQuizExplanations(lessonId),
     answers,
   };

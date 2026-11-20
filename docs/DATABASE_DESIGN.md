@@ -328,7 +328,7 @@ Security properties:
 
 > **Proof of study (Milestone 3):** completion now requires passing the lesson's quiz, checked in the database. The answer keys are also in the project's source code, so the quiz demonstrates engagement rather than being cheat-proof; XP still can't be earned more than once per lesson.
 
-Missions, objectives and achievements follow the same pattern. Each gets a public function that checks its rule server-side, then calls `private.award_xp`. Adjustments are inserted only by an admin using the service role, with `source_id` set to the transaction being corrected.
+**As built (Milestone 3):** missions, objectives and achievements don't have their own public functions. Each has a **rule** (`task_templates.rule`, `achievements.rule` + `threshold`). `complete_lesson` calls `private.evaluate_progress(user)` in the same transaction, which upserts `user_tasks`, pays completed tasks once per period through `private.award_xp` (source id `<task>:<period>`), and inserts `user_achievements` when `private.achievement_value(user, rule) >= threshold`. Achievements award no XP. Originally planned: missions, objectives and achievements follow the same pattern. Each gets a public function that checks its rule server-side, then calls `private.award_xp`. Adjustments are inserted only by an admin using the service role, with `source_id` set to the transaction being corrected.
 
 ## 6. New-user setup
 

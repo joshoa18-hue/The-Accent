@@ -11,6 +11,7 @@
 import type { Database } from "./database";
 import type { TaskStatus } from "./activity";
 import type { AttributeKey, XpSourceType } from "./progression";
+import type { AchievementRule, TaskRule } from "./rules";
 import type { CourseLevel, CourseStatus } from "./school";
 
 type DbEnums = Database["public"]["Enums"];
@@ -24,7 +25,9 @@ export type DatabaseEnumsMatchApp = [
   Equals<DbEnums["course_level"], CourseLevel>,
   Equals<DbEnums["course_status"], CourseStatus>,
   Equals<DbEnums["task_status"], TaskStatus>,
+  Equals<DbEnums["task_rule"], TaskRule>,
+  Equals<DbEnums["achievement_rule"], AchievementRule>,
 ];
 
 // Fails to compile if any entry above is `false`.
-export const databaseEnumsMatchApp: DatabaseEnumsMatchApp = [true, true, true, true, true];
+export const databaseEnumsMatchApp: DatabaseEnumsMatchApp = [true, true, true, true, true, true, true];

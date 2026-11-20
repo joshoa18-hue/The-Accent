@@ -113,8 +113,8 @@ async function DashboardContent() {
       </Panel>
 
       <p className="text-center text-xs text-slate-dim">
-        Your progress is loaded from your account. Completing lessons and missions arrives in Milestone 3; until then
-        they&apos;re shown for reference only.
+        Missions, objectives and achievements are completed automatically when you pass lessons. There&apos;s nothing to
+        claim: the server checks your progress and records it.
       </p>
     </div>
   );

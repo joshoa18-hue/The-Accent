@@ -11,7 +11,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(37);
+select plan(50);
 
 -- ----------------------------------------------------------------- fixtures
 -- Two learners. Creating them in auth.users fires the profile trigger.
@@ -21,11 +21,15 @@ insert into auth.users (id, email, raw_user_meta_data) values
   ('00000000-0000-4000-a000-00000000000a', 'rls-test-a@pgtap.invalid', '{"display_name": "Ada"}'),
   ('00000000-0000-4000-a000-00000000000b', 'rls-test-b@pgtap.invalid', '{"display_name": "   "}');
 
--- One published lesson in an OPEN course and one in a PLANNED course.
+-- Published lessons in an OPEN course (kept out of the real habits module, so
+-- the "finish a module" test below only counts the real lessons) and one in a
+-- PLANNED course.
 insert into public.lessons (id, module_id, title, xp_reward, published)
-select 'test-open-lesson', m.id, 'Test lesson', 40, true
-  from public.course_modules m join public.courses c on c.id = m.course_id
- where c.status = 'open' limit 1;
+select v.id, m.id, v.title, 40, true
+  from (values ('test-open-lesson', 'Test lesson'), ('test-open-lesson-2', 'Second test lesson')) as v(id, title)
+ cross join lateral (
+   select m.id from public.course_modules m join public.courses c on c.id = m.course_id
+    where c.status = 'open' and m.id <> 'personal-habits-course-1' order by m.id limit 1) m;
 insert into public.lessons (id, module_id, title, xp_reward, published)
 select 'test-planned-lesson', m.id, 'Planned lesson', 40, true
   from public.course_modules m join public.courses c on c.id = m.course_id
@@ -40,7 +44,16 @@ select 'test-no-quiz-lesson', m.id, 'No quiz', 40, true
 insert into private.lesson_quiz_answers (lesson_id, question_id, correct_choice_id) values
   ('test-open-lesson', 'q1', 'a'),
   ('test-open-lesson', 'q2', 'c'),
+  ('test-open-lesson-2', 'q1', 'b'),
   ('test-planned-lesson', 'q1', 'a');
+
+-- 30 extra lessons, used only to build a 30-day streak for learner B.
+insert into public.lessons (id, module_id, title, xp_reward, published)
+select 'streak-lesson-' || n, m.id, 'Streak lesson ' || n, 1, true
+  from generate_series(1, 30) as n
+ cross join lateral (
+   select m.id from public.course_modules m join public.courses c on c.id = m.course_id
+    where c.status = 'open' and m.id <> 'personal-habits-course-1' order by m.id limit 1) m;
 
 -- XP for both learners, written as the database owner (as a trusted function would).
 insert into public.xp_transactions (user_id, amount, source_type, source_id, description) values
@@ -187,14 +200,54 @@ select is(
   'an unanswered question counts as wrong'
 );
 select is(
-  public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c", "extra": "x"}'),
+  public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c", "extra": "x"}') - 'rewards',
   '{"passed": true, "wrong": [], "awarded": true, "xp": 40}'::jsonb,
   'all answers correct: the lesson is completed and XP awarded'
 );
 select is(
   public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c"}'),
-  '{"passed": true, "wrong": [], "awarded": false, "xp": 0}'::jsonb,
-  'passing again awards nothing'
+  '{"passed": true, "wrong": [], "awarded": false, "xp": 0, "rewards": []}'::jsonb,
+  'passing again awards nothing, and earns no new rewards'
+);
+
+-- Missions and achievements (migration 7), earned by the database itself.
+select is(
+  (select status::text from public.user_tasks where template_id = 'daily-one-lesson'),
+  'completed',
+  'completing a lesson completes today''s "Complete a lesson" mission'
+);
+select is(
+  (select count(*)::int from public.user_achievements where achievement_id = 'first-step'),
+  1,
+  'the first completed lesson unlocks "First Step"'
+);
+select ok(
+  public.complete_lesson('test-open-lesson-2', '{"q1": "b"}') -> 'rewards'
+    @> '[{"kind": "daily", "title": "Keep going: two lessons", "xp": 30}]'::jsonb,
+  'a second lesson today completes the two-lesson mission and reports it'
+);
+select is(
+  (select count(*)::int from public.xp_transactions where source_type = 'mission'
+     and source_id like 'daily-%:' || (now() at time zone 'utc')::date),
+  2,
+  'each daily mission pays its XP once (two missions, two rows)'
+);
+select throws_ok(
+  $$ insert into public.user_tasks (user_id, template_id, period_start, progress, status)
+     values ('00000000-0000-4000-a000-00000000000a', 'weekly-one-module', current_date, 1, 'completed') $$,
+  '42501', null,
+  'A cannot mark their own tasks complete'
+);
+select throws_ok(
+  $$ insert into public.user_achievements (user_id, achievement_id)
+     values ('00000000-0000-4000-a000-00000000000a', 'polymath') $$,
+  '42501', null,
+  'A cannot grant themselves achievements'
+);
+select throws_ok(
+  $$ select private.evaluate_progress('00000000-0000-4000-a000-00000000000a') $$,
+  '42501', null,
+  'A cannot run the progress evaluation directly'
 );
 select is(
   (select sum(amount)::int from public.xp_transactions where source_id = 'test-open-lesson'),
@@ -231,6 +284,58 @@ select is(
   public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c"}') -> 'awarded',
   'true'::jsonb,
   'each learner earns a lesson''s XP for themselves (B is not blocked by A)'
+);
+
+-- B finishes the real "How Habits Form" module (all three planned lessons).
+select public.complete_lesson('personal-habits-course-1-1', '{"q1": "b", "q2": "c", "q3": "a"}');
+select public.complete_lesson('personal-habits-course-1-2', '{"q1": "b", "q2": "c", "q3": "a"}');
+select ok(
+  public.complete_lesson('personal-habits-course-1-3', '{"q1": "a", "q2": "b", "q3": "c"}') -> 'rewards'
+    @> '[{"kind": "weekly", "title": "Finish a module", "xp": 100}]'::jsonb,
+  'finishing every lesson in a module completes the weekly "Finish a module" objective'
+);
+select is(
+  (select count(*)::int from public.xp_transactions
+    where source_type = 'objective' and source_id like 'weekly-one-module:%'),
+  1,
+  'the objective''s XP is recorded once, for B only'
+);
+
+-- ------------------------------------------------------- 2c. thresholds (as the database owner)
+reset role;
+
+-- B completed lessons TODAY above. Add 2 to 30 days ago, leaving YESTERDAY
+-- empty: the longest run is 29 days (2..30 days ago), and today stands alone.
+insert into public.lesson_completions (user_id, lesson_id, completed_at)
+select '00000000-0000-4000-a000-00000000000b', 'streak-lesson-' || n, now() - make_interval(days => n)
+  from generate_series(2, 30) as n;
+select private.evaluate_progress('00000000-0000-4000-a000-00000000000b');
+select is(
+  (select count(*)::int from public.user_achievements
+    where user_id = '00000000-0000-4000-a000-00000000000b' and achievement_id = 'thirty-days'),
+  0,
+  '29 days in a row (with a gap before today) is not yet "Steadfast"'
+);
+-- Fill the gap: today back to 30 days ago is now one unbroken run of 31 days.
+insert into public.lesson_completions (user_id, lesson_id, completed_at)
+values ('00000000-0000-4000-a000-00000000000b', 'streak-lesson-1', now() - interval '1 day');
+select ok(
+  private.evaluate_progress('00000000-0000-4000-a000-00000000000b')
+    @> '[{"kind": "achievement", "title": "Steadfast"}]'::jsonb,
+  '30 days in a row unlocks "Steadfast"'
+);
+
+insert into public.xp_transactions (user_id, amount, source_type, source_id, description)
+values ('00000000-0000-4000-a000-00000000000b', 30000, 'adjustment', 'test-big-bonus', 'Test bonus');
+select ok(
+  private.evaluate_progress('00000000-0000-4000-a000-00000000000b')
+    @> '[{"kind": "achievement", "title": "The High Road"}]'::jsonb,
+  'reaching the level-25 XP threshold unlocks "The High Road"'
+);
+select is(
+  private.evaluate_progress('00000000-0000-4000-a000-00000000000b'),
+  '[]'::jsonb,
+  'evaluating again earns nothing new (idempotent)'
 );
 
 -- ------------------------------------------------------- 3. not signed in

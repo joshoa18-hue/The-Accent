@@ -36,20 +36,41 @@ export function readQuizAnswers(
   return { answers, unanswered };
 }
 
+/** Something newly earned alongside a lesson: a mission, objective or achievement. */
+export type Reward = { kind: "daily" | "weekly" | "achievement"; title: string; xp: number };
+
 /** What complete_lesson() returns. */
 export type CompletionResult = {
   passed: boolean;
   wrong: string[];
   awarded: boolean;
   xp: number;
+  rewards: Reward[];
 };
+
+const rewardKinds = new Set<Reward["kind"]>(["daily", "weekly", "achievement"]);
+
+function isWholeNumber(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value) && value >= 0;
+}
+
+function parseReward(value: unknown): Reward | null {
+  if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
+  const { kind, title, xp } = value as Record<string, unknown>;
+  if (typeof kind !== "string" || !rewardKinds.has(kind as Reward["kind"])) return null;
+  if (typeof title !== "string" || title.length === 0 || !isWholeNumber(xp)) return null;
+  return { kind: kind as Reward["kind"], title, xp };
+}
 
 /** Check the database's reply has exactly the expected shape before trusting it. */
 export function parseCompletionResult(value: unknown): CompletionResult | null {
   if (typeof value !== "object" || value === null || Array.isArray(value)) return null;
-  const { passed, wrong, awarded, xp } = value as Record<string, unknown>;
+  const { passed, wrong, awarded, xp, rewards } = value as Record<string, unknown>;
   if (typeof passed !== "boolean" || typeof awarded !== "boolean") return null;
-  if (typeof xp !== "number" || !Number.isInteger(xp) || xp < 0) return null;
+  if (!isWholeNumber(xp)) return null;
   if (!Array.isArray(wrong) || !wrong.every((id) => typeof id === "string")) return null;
-  return { passed, wrong, awarded, xp };
+  if (!Array.isArray(rewards)) return null;
+  const parsedRewards = rewards.map(parseReward);
+  if (parsedRewards.some((reward) => reward === null)) return null;
+  return { passed, wrong, awarded, xp, rewards: parsedRewards as Reward[] };
 }

@@ -1,11 +1,17 @@
 "use client";
 
 import { useActionState } from "react";
-import { CheckCircle2, CircleAlert, Loader2, Sparkles } from "lucide-react";
+import { Award, CheckCircle2, CircleAlert, Loader2, Sparkles, Target } from "lucide-react";
 import { submitQuiz, type QuizState } from "@/app/lessons/[lessonId]/actions";
-import { answerFieldName } from "@/lib/lessons/quiz";
+import { answerFieldName, type Reward } from "@/lib/lessons/quiz";
 import { cn } from "@/lib/utils";
 import type { PublicQuizQuestion } from "@/types/lesson";
+
+const rewardLabels: Record<Reward["kind"], string> = {
+  daily: "Daily mission complete",
+  weekly: "Weekly objective complete",
+  achievement: "Achievement unlocked",
+};
 
 type QuizFormProps = {
   lessonId: string;
@@ -108,6 +114,23 @@ export function QuizForm({ lessonId, questions, xpReward, alreadyCompleted }: Qu
                 ? "Your XP has been recorded. Your level, attributes and mastery update automatically."
                 : "You've already earned this lesson's XP, so nothing extra was added."}
             </p>
+            {state.rewards.length > 0 ? (
+              <ul className="mt-3 space-y-1.5 border-t border-gold-700/30 pt-3">
+                {state.rewards.map((reward) => (
+                  <li key={`${reward.kind}-${reward.title}`} className="flex items-center gap-2 text-sm text-parchment">
+                    {reward.kind === "achievement" ? (
+                      <Award aria-hidden className="size-4 text-gold-400" />
+                    ) : (
+                      <Target aria-hidden className="size-4 text-gold-400" />
+                    )}
+                    <span>
+                      {rewardLabels[reward.kind]}: {reward.title}
+                      {reward.xp > 0 ? <span className="text-gold-300"> +{reward.xp} XP</span> : null}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
           </div>
         ) : null}
         {state.status === "retry" ? (

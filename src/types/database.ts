@@ -7,14 +7,14 @@ export type Database = {
           Tables: {
             "achievements": {
                   Row: {
-                    "description": string,"id": string,"sort_order": number,"title": string,"xp_reward": number
+                    "description": string,"id": string,"rule": Database["public"]['Enums']["achievement_rule"],"sort_order": number,"threshold": number,"title": string,"xp_reward": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "description": string,"id": string,"sort_order"?: number,"title": string,"xp_reward"?: number
+                    "description": string,"id": string,"rule": Database["public"]['Enums']["achievement_rule"],"sort_order"?: number,"threshold": number,"title": string,"xp_reward"?: number
                   }
                   Update: {
-                    "description"?: string,"id"?: string,"sort_order"?: number,"title"?: string,"xp_reward"?: number
+                    "description"?: string,"id"?: string,"rule"?: Database["public"]['Enums']["achievement_rule"],"sort_order"?: number,"threshold"?: number,"title"?: string,"xp_reward"?: number
                   }
                   Relationships: [
                     
@@ -155,14 +155,14 @@ isOneToOne: false
                   ]
                 },"task_templates": {
                   Row: {
-                    "description": string,"id": string,"kind": Database["public"]['Enums']["task_kind"],"school_slug": string | null,"sort_order": number,"target": number,"title": string,"unit": string,"xp_reward": number
+                    "description": string,"id": string,"kind": Database["public"]['Enums']["task_kind"],"rule": Database["public"]['Enums']["task_rule"],"school_slug": string | null,"sort_order": number,"target": number,"title": string,"unit": string,"xp_reward": number
                   }
                   ComputedFields: never
                   Insert: {
-                    "description"?: string,"id": string,"kind": Database["public"]['Enums']["task_kind"],"school_slug"?: string | null,"sort_order"?: number,"target"?: number,"title": string,"unit"?: string,"xp_reward": number
+                    "description"?: string,"id": string,"kind": Database["public"]['Enums']["task_kind"],"rule": Database["public"]['Enums']["task_rule"],"school_slug"?: string | null,"sort_order"?: number,"target"?: number,"title": string,"unit"?: string,"xp_reward": number
                   }
                   Update: {
-                    "description"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["task_kind"],"school_slug"?: string | null,"sort_order"?: number,"target"?: number,"title"?: string,"unit"?: string,"xp_reward"?: number
+                    "description"?: string,"id"?: string,"kind"?: Database["public"]['Enums']["task_kind"],"rule"?: Database["public"]['Enums']["task_rule"],"school_slug"?: string | null,"sort_order"?: number,"target"?: number,"title"?: string,"unit"?: string,"xp_reward"?: number
                   }
                   Relationships: [
                     {
@@ -296,7 +296,7 @@ isOneToOne: false
                            }
           }
           Enums: {
-            "attribute_key": "wisdom"|"intellect"|"strategy"|"creativity"|"eloquence"|"discipline","course_level": "foundation"|"intermediate"|"advanced","course_status": "open"|"planned","task_kind": "daily"|"weekly","task_status": "not_started"|"in_progress"|"completed","xp_source_type": "lesson"|"course"|"mission"|"objective"|"achievement"|"adjustment"
+            "achievement_rule": "lessons_completed"|"schools_studied"|"schools_with_xp"|"school_xp"|"total_xp"|"streak_days","attribute_key": "wisdom"|"intellect"|"strategy"|"creativity"|"eloquence"|"discipline","course_level": "foundation"|"intermediate"|"advanced","course_status": "open"|"planned","task_kind": "daily"|"weekly","task_rule": "lessons_completed"|"modules_completed","task_status": "not_started"|"in_progress"|"completed","xp_source_type": "lesson"|"course"|"mission"|"objective"|"achievement"|"adjustment"
           }
           CompositeTypes: {
             [_ in never]: never
@@ -412,7 +412,7 @@ export type CompositeTypes<
 export const Constants = {
   "public": {
           Enums: {
-            "attribute_key": ["wisdom", "intellect", "strategy", "creativity", "eloquence", "discipline"],"course_level": ["foundation", "intermediate", "advanced"],"course_status": ["open", "planned"],"task_kind": ["daily", "weekly"],"task_status": ["not_started", "in_progress", "completed"],"xp_source_type": ["lesson", "course", "mission", "objective", "achievement", "adjustment"]
+            "achievement_rule": ["lessons_completed", "schools_studied", "schools_with_xp", "school_xp", "total_xp", "streak_days"],"attribute_key": ["wisdom", "intellect", "strategy", "creativity", "eloquence", "discipline"],"course_level": ["foundation", "intermediate", "advanced"],"course_status": ["open", "planned"],"task_kind": ["daily", "weekly"],"task_rule": ["lessons_completed", "modules_completed"],"task_status": ["not_started", "in_progress", "completed"],"xp_source_type": ["lesson", "course", "mission", "objective", "achievement", "adjustment"]
           }
         }
 } as const

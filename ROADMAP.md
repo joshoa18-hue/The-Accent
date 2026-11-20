@@ -28,13 +28,13 @@ Each milestone ends with working, tested software and a development report in [d
    - ✅ A true 404 status for unknown school slugs, via a slug check in `src/proxy.ts`. *(Checkpoint 2)*
 7. ✅ **Generated database types** (`npm run db:types`), plus a compile-time contract with the app's own types. *(Checkpoint 1)*
 
-## Milestone 3 — Learning loop
+## ✅ Milestone 3 — Learning loop *(complete)*
 
 **Goal:** completing real work earns real XP.
 
 1. ✅ **Lessons you can read** *(Checkpoint 1)*: typed TypeScript content blocks (no new dependencies), the first three lessons of *Building Lasting Habits*, public lesson pages, outline links, 404s, and quiz answer keys in a locked `private` table. Lessons are seeded **unpublished** until step 2.
 2. ✅ **Completing a lesson earns XP** *(Checkpoint 2)*: `complete_lesson(lesson, answers)` checks the quiz in the database and awards XP once (the old no-quiz version was dropped); lessons are published; course progress drives Continue Learning, Current Learning and outline ticks.
-3. **Missions, objectives and achievements earned on the server** *(Checkpoint 3)*: redesigned to be verifiable from lesson completions; streaks.
+3. ✅ **Missions, objectives and achievements earned on the server** *(Checkpoint 3)*: every task and achievement has a rule the database verifies (lessons, modules, schools, XP, streaks); `evaluate_progress` runs in the same transaction as each completion and pays tasks once per period.
 4. *Moved to Milestone 4:* a service worker for offline reading, designed around real lesson data so offline mode never shows invented XP.
 
 ## Milestone 4 — Depth and reflection
@@ -62,4 +62,5 @@ Each milestone ends with working, tested software and a development report in [d
 | Development mode can show one stale load right after saving a profile (production verified correct) | None needed; dev-only cache behaviour |
 | The laptop's 3.4 GB of RAM can't run Docker and a production build at once | Stop Docker before `npm run build`, or add RAM |
 | No offline support (manifest only) | Milestone 3 |
-| Missions, objectives and achievements are display-only | Milestone 3 |
+| Only 3 lessons are written (one module) | Write more lessons; the format and pipeline are ready |
+| The quiz says which question is wrong, so guessing is possible | Optional: attempt limits or hiding which answer was wrong |

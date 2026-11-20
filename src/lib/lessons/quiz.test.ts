@@ -32,12 +32,17 @@ describe("readQuizAnswers", () => {
 });
 
 describe("parseCompletionResult", () => {
-  it("accepts the database's reply", () => {
-    expect(parseCompletionResult({ passed: true, wrong: [], awarded: true, xp: 40 })).toEqual({
+  it("accepts the database's reply, including newly earned rewards", () => {
+    const rewards = [
+      { kind: "daily", title: "Complete a lesson", xp: 20 },
+      { kind: "achievement", title: "First Step", xp: 0 },
+    ];
+    expect(parseCompletionResult({ passed: true, wrong: [], awarded: true, xp: 40, rewards })).toEqual({
       passed: true,
       wrong: [],
       awarded: true,
       xp: 40,
+      rewards,
     });
   });
 
@@ -45,9 +50,12 @@ describe("parseCompletionResult", () => {
     ["null", null],
     ["an array", []],
     ["missing fields", { passed: true }],
-    ["negative XP", { passed: true, wrong: [], awarded: true, xp: -5 }],
-    ["fractional XP", { passed: true, wrong: [], awarded: true, xp: 1.5 }],
-    ["non-text question ids", { passed: false, wrong: [1], awarded: false, xp: 0 }],
+    ["negative XP", { passed: true, wrong: [], awarded: true, xp: -5, rewards: [] }],
+    ["fractional XP", { passed: true, wrong: [], awarded: true, xp: 1.5, rewards: [] }],
+    ["non-text question ids", { passed: false, wrong: [1], awarded: false, xp: 0, rewards: [] }],
+    ["missing rewards", { passed: true, wrong: [], awarded: true, xp: 40 }],
+    ["an unknown reward kind", { passed: true, wrong: [], awarded: true, xp: 40, rewards: [{ kind: "bonus", title: "x", xp: 1 }] }],
+    ["a reward without a title", { passed: true, wrong: [], awarded: true, xp: 40, rewards: [{ kind: "daily", title: "", xp: 1 }] }],
   ])("rejects %s", (_label, value) => {
     expect(parseCompletionResult(value)).toBeNull();
   });

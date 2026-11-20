@@ -91,7 +91,7 @@ Then, with the database running:
 npm run db:test
 ```
 
-This runs the **database security tests** (29 so far): Row Level Security, privileges, the XP award rules and the locked quiz answer keys.
+This runs the **database security tests** (50 so far): Row Level Security, privileges, the XP award rules and the locked quiz answer keys.
 
 ### 2. Manual, in a browser
 
@@ -100,7 +100,7 @@ With `npm run db:start` running, use `npm run build && npm run start` (or `npm r
 1. **Signed out:** `/` and `/character` redirect to `/login`; `/schools`, **every school page** and every lesson open; `/schools/not-a-school` and `/lessons/not-a-lesson` return **404**.
 2. **Sign in** with a made-up address such as `a@example.test`, using the link from the mail catcher at http://127.0.0.1:55324. You land on the page you asked for.
 3. **New learner:** the dashboard shows level 1, 0 XP, missions "Not started", achievements locked, **no "Sample data" label**, and "No XP yet" in the XP history.
-4. **Lessons:** open `/lessons/personal-habits-course-1-1`. Signed out, the quiz is read-only with a sign-in link. Signed in: a blank answer says "Choose an answer"; a wrong answer is flagged with no XP; all correct shows **+40 XP**, then explanations; submitting again adds nothing. The dashboard then shows the course in Continue Learning, and the outline marks the lesson (completed).
+4. **Lessons:** open `/lessons/personal-habits-course-1-1`. Signed out, the quiz is read-only with a sign-in link. Signed in: a blank answer says "Choose an answer"; a wrong answer is flagged with no XP; all correct shows **+40 XP**, then explanations; submitting again adds nothing. The dashboard then shows the course in Continue Learning, and the outline marks the lesson (completed). The quiz result also lists any **missions, objectives or achievements** just earned (e.g. "Daily mission complete: Complete a lesson +20 XP"); passing all three habit lessons completes "Finish a module". The dashboard's missions and objectives update automatically; nothing has to be claimed.
 5. **Profile:** on `/character`, an empty display name shows "Enter a display name."; a valid one shows **Saved**, and the dashboard greets you by the new name on its first load (production build).
 6. **Sign out:** you land on `/login`. Pressing **Back** doesn't show the previous learner's page, and View Source contains no trace of their name or email.
 7. **Two learners:** sign in as `b@example.test`. They see only their own fresh character, nothing of A's.
