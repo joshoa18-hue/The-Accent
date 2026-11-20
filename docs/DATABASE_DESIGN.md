@@ -199,6 +199,10 @@ group by user_id, school_slug;
 
 Levels, attribute ranks and mastery tiers stay in TypeScript (`src/lib/progression/`), because the curves are game design and are already fully tested there. If the SQL views are ever needed in reports, those functions would be ported along with matching tests.
 
+### Quiz answer keys (Milestone 3)
+
+`private.lesson_quiz_answers (lesson_id, question_id, correct_choice_id)` holds only the answer key for each written lesson's quiz, generated from `src/content/catalogue/lessons/`. It lives in the `private` schema (no API access), has RLS enabled, and all privileges revoked from `public`, `anon` and `authenticated`. Only security-definer functions read it. Database tests prove both signed-in and anonymous users get "permission denied".
+
 ## 4. Row Level Security
 
 RLS is enabled on **every** table. With no policy, a table is invisible, which is the safe default.

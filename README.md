@@ -11,6 +11,7 @@ A lifelong personal learning academy styled as an educational RPG. You study acr
 | Dashboard: welcome, character profile, level and XP, attributes, daily missions, weekly objectives, current learning, achievements, continue learning, the eight schools | `/` | Signed in |
 | Character sheet: level, XP, attributes, mastery, achievements, XP history, **profile editing** | `/character` | Signed in |
 | Schools index and eight school pages with expandable course outlines | `/schools`, `/schools/[slug]` | Public |
+| Lessons: reading, plus a read-only quiz (answering arrives in Milestone 3, checkpoint 2) | `/lessons/[lessonId]` | Public |
 | Sign in (magic link) and sign out | `/login`, `/auth/confirm`, `/auth/signout` | Public |
 | Web app manifest and icons (installable, no offline mode yet) | `/manifest.webmanifest` | Public |
 
@@ -90,13 +91,13 @@ Then, with the database running:
 npm run db:test
 ```
 
-This runs **24 database security tests**: Row Level Security, privileges, and the XP award rules.
+This runs the **database security tests** (29 so far): Row Level Security, privileges, the XP award rules and the locked quiz answer keys.
 
 ### 2. Manual, in a browser
 
 With `npm run db:start` running, use `npm run build && npm run start` (or `npm run dev`) and check:
 
-1. **Signed out:** `/` and `/character` redirect to `/login`; `/schools` and every school page open; `/schools/not-a-school` returns **404**.
+1. **Signed out:** `/` and `/character` redirect to `/login`; `/schools`, **every school page** and every lesson open; `/schools/not-a-school` and `/lessons/not-a-lesson` return **404**.
 2. **Sign in** with a made-up address such as `a@example.test`, using the link from the mail catcher at http://127.0.0.1:55324. You land on the page you asked for.
 3. **New learner:** the dashboard shows level 1, 0 XP, missions "Not started", achievements locked, **no "Sample data" label**, and "No XP yet" in the XP history.
 4. **Profile:** on `/character`, an empty display name shows "Enter a display name."; a valid one shows **Saved**, and the dashboard greets you by the new name on its first load (production build).

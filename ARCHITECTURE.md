@@ -107,6 +107,13 @@ xp_transactions ─► sumXp() ─► total XP ─► getLevelProgress(CHARACTER
 - **Private pages** (`/`, `/character`) render their content inside `<Suspense>` because they read the session (cookies). The static shell (sidebar, layout) still loads instantly.
 - **`"use cache: private"`** wraps `getCurrentUser()`. Verifying a token compares its expiry with the clock, which can't be prerendered. A private cache runs at request time, is shared only within one request, and is never stored in a server-wide cache.
 
+## 5a. Lessons (Milestone 3)
+
+- **Content as data.** Lessons are typed objects in `src/content/catalogue/lessons/`: a list of blocks (`heading`, `paragraph`, `keyIdea`, `quote`, `list`, `reflection`) plus a quiz. `LessonBlocks` has one renderer per block type, enforced by a `Record` over the block-type union. Text is always rendered as text; there's no `dangerouslySetInnerHTML`.
+- **Public reading.** `/lessons/[lessonId]` is prebuilt for every written lesson; unknown ids get a real 404 from the Proxy.
+- **Answer keys never reach the browser.** `src/lib/data/lessons.ts` is `server-only`, and pages receive `toPublicQuiz()` output with answers stripped (tested, and checked in the raw HTML). In the database, keys live in `private.lesson_quiz_answers`, a schema the API doesn't expose and no learner role can read.
+- **Seeded unpublished.** `scripts/seed-sql.ts` sets `LESSONS_PUBLISHED = false` until the quiz-checking `complete_lesson` exists (Milestone 3, checkpoint 2), so the old function can't award XP for them.
+
 ## 6a. Authentication
 
 ```

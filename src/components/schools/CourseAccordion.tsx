@@ -1,6 +1,8 @@
-import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import { BookOpen, ChevronDown } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
-import { courseAnchorId } from "@/lib/routes";
+import type { LessonLink } from "@/lib/data/lessons";
+import { courseAnchorId, routes } from "@/lib/routes";
 import type { Course, CourseLevel, CourseStatus } from "@/types/school";
 
 const levelLabels: Record<CourseLevel, string> = {
@@ -19,6 +21,12 @@ export function plannedLessonCount(course: Course): number {
   return course.modules.reduce((sum, module) => sum + module.plannedLessons, 0);
 }
 
+type CourseAccordionProps = {
+  course: Course;
+  /** Written lessons by module id. Modules without an entry have none yet. */
+  lessonsByModule?: Readonly<Record<string, readonly LessonLink[]>>;
+};
+
 /**
  * One expandable course.
  *
@@ -26,10 +34,12 @@ export function plannedLessonCount(course: Course): number {
  * closes with NO JavaScript, works with the keyboard (Enter/Space) and is
  * announced as "expanded/collapsed" by screen readers automatically.
  * Tailwind's `group-open:` styles react to the <details open> attribute.
+ * Written lessons appear as links under their module.
  */
-export function CourseAccordion({ course }: { course: Course }) {
+export function CourseAccordion({ course, lessonsByModule = {} }: CourseAccordionProps) {
   const status = statusBadges[course.status];
   const lessons = plannedLessonCount(course);
+  const written = course.modules.reduce((sum, module) => sum + (lessonsByModule[module.id]?.length ?? 0), 0);
 
   return (
     <details
@@ -46,6 +56,7 @@ export function CourseAccordion({ course }: { course: Course }) {
           <p className="mt-1 text-sm text-mist">{course.summary}</p>
           <p className="mt-1.5 text-xs text-slate-dim">
             {course.modules.length} modules · {lessons} lessons planned
+            {written > 0 ? ` · ${written} ready to read` : ""}
           </p>
         </div>
         <ChevronDown
@@ -57,20 +68,49 @@ export function CourseAccordion({ course }: { course: Course }) {
       <div className="border-t border-charcoal-700/60 px-4 pt-4 pb-5 sm:px-5">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-gold-500">Course structure</p>
         <ol className="space-y-2">
-          {course.modules.map((module, index) => (
-            <li key={module.id} className="flex items-center gap-3 rounded-xl bg-charcoal-900/70 px-3 py-2.5">
-              <span className="grid size-7 shrink-0 place-items-center rounded-full border border-gold-700/40 text-xs font-semibold text-gold-300">
-                {index + 1}
-              </span>
-              <span className="min-w-0 flex-1 text-sm text-parchment">{module.title}</span>
-              <span className="shrink-0 text-xs text-slate-dim">{module.plannedLessons} lessons</span>
-            </li>
-          ))}
+          {course.modules.map((module, index) => {
+            const moduleLessons = lessonsByModule[module.id] ?? [];
+            return (
+              <li key={module.id} className="rounded-xl bg-charcoal-900/70 px-3 py-2.5">
+                <div className="flex items-center gap-3">
+                  <span className="grid size-7 shrink-0 place-items-center rounded-full border border-gold-700/40 text-xs font-semibold text-gold-300">
+                    {index + 1}
+                  </span>
+                  <span className="min-w-0 flex-1 text-sm text-parchment">{module.title}</span>
+                  <span className="shrink-0 text-xs text-slate-dim">
+                    {moduleLessons.length > 0
+                      ? `${moduleLessons.length} of ${module.plannedLessons} lessons`
+                      : `${module.plannedLessons} lessons`}
+                  </span>
+                </div>
+                {moduleLessons.length > 0 ? (
+                  <ul className="mt-2 space-y-1 pl-10">
+                    {moduleLessons.map((lesson) => (
+                      <li key={lesson.id}>
+                        <Link
+                          href={routes.lesson(lesson.id)}
+                          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-gold-300 transition-colors hover:bg-charcoal-800/70 hover:text-gold-200"
+                        >
+                          <BookOpen aria-hidden className="size-3.5 shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            {lesson.order}. {lesson.title}
+                          </span>
+                          <span className="shrink-0 text-xs text-slate-dim">{lesson.minutes} min</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+              </li>
+            );
+          })}
         </ol>
         <p className="mt-4 text-xs text-slate-dim">
-          {course.status === "open"
-            ? "Lessons for this course are being written and will appear here in an upcoming milestone."
-            : "This course is part of the curriculum plan. Its lessons will be written after the open courses."}
+          {course.status === "planned"
+            ? "This course is part of the curriculum plan. Its lessons will be written after the open courses."
+            : written > 0
+              ? "More lessons for this course are being written and will appear here as they're finished."
+              : "Lessons for this course are being written and will appear here in an upcoming update."}
         </p>
       </div>
     </details>

@@ -8,7 +8,16 @@
  * Imports are relative with a .ts extension because Node runs this file
  * directly (Node 24 strips the types); it does not understand the "@/" alias.
  */
+import { catalogueLessons } from "../src/content/catalogue/lessons/index.ts";
 import { catalogueSchools } from "../src/content/catalogue/schools.ts";
+
+/**
+ * Whether written lessons are marked `published` in the database.
+ * FALSE until Milestone 3 checkpoint 2: the current complete_lesson() awards
+ * XP for any published lesson without checking a quiz, so lessons stay
+ * unpublishable (and un-completable) until the quiz-checking version exists.
+ */
+const LESSONS_PUBLISHED = false;
 import {
   sampleAchievements,
   sampleDailyMissions,
@@ -29,10 +38,12 @@ export function sqlLiteral(value: SqlValue): string {
   return `'${value.replaceAll("'", "''")}'`;
 }
 
+/** `table` is "name" (public schema) or "schema.name". */
 function insert(table: string, columns: string[], rows: SqlValue[][]): string {
   if (rows.length === 0) return "";
+  const qualified = table.includes(".") ? table : `public.${table}`;
   const values = rows.map((row) => `  (${row.map(sqlLiteral).join(", ")})`).join(",\n");
-  return `insert into public.${table} (${columns.join(", ")}) values\n${values};\n`;
+  return `insert into ${qualified} (${columns.join(", ")}) values\n${values};\n`;
 }
 
 export function buildSeedSql(): string {
@@ -68,6 +79,14 @@ export function buildSeedSql(): string {
     ]),
   ];
 
+  const lessons = catalogueLessons.map((lesson): SqlValue[] => [
+    lesson.id, lesson.moduleId, lesson.title, lesson.xpReward, LESSONS_PUBLISHED, lesson.order,
+  ]);
+  // Only the answer KEY goes to the database: no prompts, choices or explanations.
+  const quizAnswers = catalogueLessons.flatMap((lesson) =>
+    lesson.quiz.map((question): SqlValue[] => [lesson.id, question.id, question.correctChoiceId]),
+  );
+
   return [
     "-- =============================================================================",
     "-- GENERATED FILE: do not edit by hand.",
@@ -82,5 +101,7 @@ export function buildSeedSql(): string {
     insert("course_modules", ["id", "course_id", "title", "planned_lessons", "sort_order"], modules),
     insert("achievements", ["id", "title", "description", "xp_reward", "sort_order"], achievements),
     insert("task_templates", ["id", "kind", "title", "description", "xp_reward", "target", "unit", "school_slug", "sort_order"], templates),
+    insert("lessons", ["id", "module_id", "title", "xp_reward", "published", "sort_order"], lessons),
+    insert("private.lesson_quiz_answers", ["lesson_id", "question_id", "correct_choice_id"], quizAnswers),
   ].join("\n");
 }

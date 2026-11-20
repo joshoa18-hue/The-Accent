@@ -165,3 +165,19 @@ insert into public.task_templates (id, kind, title, description, xp_reward, targ
   ('weekly-sessions', 'weekly', 'Complete study sessions', '', 100, 5, 'sessions', null, 0),
   ('weekly-modules', 'weekly', 'Finish course modules', '', 150, 2, 'modules', null, 1),
   ('weekly-schools', 'weekly', 'Study across different schools', '', 80, 3, 'schools', null, 2);
+
+insert into public.lessons (id, module_id, title, xp_reward, published, sort_order) values
+  ('personal-habits-course-1-1', 'personal-habits-course-1', 'What a Habit Really Is', 40, false, 1),
+  ('personal-habits-course-1-2', 'personal-habits-course-1', 'The Habit Loop: Cue, Routine, Reward', 40, false, 2),
+  ('personal-habits-course-1-3', 'personal-habits-course-1', 'Starting Small: Your First Habit Plan', 40, false, 3);
+
+insert into private.lesson_quiz_answers (lesson_id, question_id, correct_choice_id) values
+  ('personal-habits-course-1-1', 'q1', 'b'),
+  ('personal-habits-course-1-1', 'q2', 'c'),
+  ('personal-habits-course-1-1', 'q3', 'a'),
+  ('personal-habits-course-1-2', 'q1', 'b'),
+  ('personal-habits-course-1-2', 'q2', 'c'),
+  ('personal-habits-course-1-2', 'q3', 'a'),
+  ('personal-habits-course-1-3', 'q1', 'a'),
+  ('personal-habits-course-1-3', 'q2', 'b'),
+  ('personal-habits-course-1-3', 'q3', 'c');

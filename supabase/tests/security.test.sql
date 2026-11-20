@@ -11,7 +11,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(24);
+select plan(29);
 
 -- ----------------------------------------------------------------- fixtures
 -- Two learners. Creating them in auth.users fires the profile trigger.
@@ -74,6 +74,22 @@ select ok(
   'the seed loaded all eight schools'
 );
 
+-- Written lessons (Milestone 3): seeded, but not completable until the
+-- quiz-checking complete_lesson arrives in checkpoint 2.
+select is(
+  (select count(*)::int from public.lessons where id like 'personal-habits-course-1-%' and not published),
+  3,
+  'the three written lessons are seeded, unpublished'
+);
+
+select is(
+  (select count(*)::int from public.lessons l
+    where l.id like 'personal-habits-course-1-%'
+      and not exists (select 1 from private.lesson_quiz_answers a where a.lesson_id = l.id)),
+  0,
+  'every written lesson has a quiz answer key'
+);
+
 -- ------------------------------------------------------- 2. acting as learner A
 set local role authenticated;
 select set_config('request.jwt.claims',
@@ -84,6 +100,18 @@ select is((select id from public.profiles), '00000000-0000-4000-a000-00000000000
 select is((select count(*)::int from public.xp_transactions), 1, 'A sees only their own XP rows');
 select is((select total_xp from public.character_xp), 100, 'the character_xp view sums only A''s XP');
 select is((select count(*)::int from public.schools), 8, 'A can read the catalogue');
+
+select throws_ok(
+  $$ select count(*) from private.lesson_quiz_answers $$,
+  '42501', null,
+  'A cannot read the quiz answer keys'
+);
+
+select is(
+  (select count(*)::int from public.lessons where id like 'personal-habits-course-1-%'),
+  0,
+  'unpublished lessons are hidden from learners'
+);
 
 select throws_ok(
   $$ insert into public.xp_transactions (user_id, amount, source_type, source_id, description)
@@ -156,6 +184,12 @@ select throws_ok(
   $$ select public.complete_lesson('test-open-lesson') $$,
   '42501', null,
   'anonymous visitors cannot complete lessons'
+);
+
+select throws_ok(
+  $$ select count(*) from private.lesson_quiz_answers $$,
+  '42501', null,
+  'anonymous visitors cannot read the quiz answer keys'
 );
 
 reset role;

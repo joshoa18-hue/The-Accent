@@ -11,6 +11,7 @@ import { SampleDataNotice } from "@/components/ui/SampleDataNotice";
 import { ArrowLink } from "@/components/ui/ArrowLink";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCharacterSummary } from "@/lib/data/character";
+import { getLessonLinksByModule } from "@/lib/data/lessons";
 import { getSchoolBySlug } from "@/lib/data/schools";
 import { combineSources } from "@/lib/data/source";
 import { ATTRIBUTES } from "@/lib/progression/attributes";
@@ -26,7 +27,11 @@ import { formatNumber } from "@/lib/utils";
  */
 export async function SchoolDetails({ params }: Pick<PageProps<"/schools/[slug]">, "params">) {
   const { slug } = await params;
-  const [schoolResult, user] = await Promise.all([getSchoolBySlug(slug), getCurrentUser()]);
+  const [schoolResult, user, lessonLinks] = await Promise.all([
+    getSchoolBySlug(slug),
+    getCurrentUser(),
+    getLessonLinksByModule(),
+  ]);
   const school = schoolResult.data;
 
   // Unknown slug (e.g. a typo in the address bar) → show the 404 page.
@@ -105,7 +110,7 @@ export async function SchoolDetails({ params }: Pick<PageProps<"/schools/[slug]"
               <ul className="space-y-3">
                 {category.courses.map((course) => (
                   <li key={course.id}>
-                    <CourseAccordion course={course} />
+                    <CourseAccordion course={course} lessonsByModule={lessonLinks.data} />
                   </li>
                 ))}
               </ul>
