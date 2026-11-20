@@ -33,7 +33,7 @@ Each milestone ends with working, tested software and a development report in [d
 **Goal:** completing real work earns real XP.
 
 1. ✅ **Lessons you can read** *(Checkpoint 1)*: typed TypeScript content blocks (no new dependencies), the first three lessons of *Building Lasting Habits*, public lesson pages, outline links, 404s, and quiz answer keys in a locked `private` table. Lessons are seeded **unpublished** until step 2.
-2. **Completing a lesson earns XP** *(Checkpoint 2)*: `complete_lesson(lesson, answers)` checks the quiz in the database and awards XP once; course progress drives "Continue learning".
+2. ✅ **Completing a lesson earns XP** *(Checkpoint 2)*: `complete_lesson(lesson, answers)` checks the quiz in the database and awards XP once (the old no-quiz version was dropped); lessons are published; course progress drives Continue Learning, Current Learning and outline ticks.
 3. **Missions, objectives and achievements earned on the server** *(Checkpoint 3)*: redesigned to be verifiable from lesson completions; streaks.
 4. *Moved to Milestone 4:* a service worker for offline reading, designed around real lesson data so offline mode never shows invented XP.
 

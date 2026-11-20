@@ -248,6 +248,8 @@ There are **no insert, update or delete policies** on `xp_transactions`, `lesson
 
 ## 5. Awarding XP safely
 
+> **As built (Milestone 3):** the migrations replaced `complete_lesson(lesson)` with **`complete_lesson(p_lesson_id text, p_answers jsonb) returns jsonb`**, which also checks every answer against `private.lesson_quiz_answers` before recording the completion and awarding XP, and returns `{ passed, wrong, awarded, xp }`. A lesson without an answer key can't be completed (fails closed). The original version was dropped in the same migration. The SQL below shows the original design; `supabase/migrations/20261122000100_complete_lesson_with_quiz.sql` is the source of truth.
+
 The browser *asks* to complete a lesson. The database *decides*.
 
 ```sql
@@ -324,7 +326,7 @@ Security properties:
 | Inserting directly via the API | There are no insert policies, and `private.award_xp` isn't executable by API roles |
 | Search-path hijacking of a `security definer` function | `set search_path = ''` and fully qualified table names |
 
-> **Still to design (Milestone 3):** proof that a lesson was actually *studied*, such as a quiz score or minimum time. Today's design trusts "complete" once per lesson. That is safe against farming, because XP can be earned only once per lesson, but not against skipping.
+> **Proof of study (Milestone 3):** completion now requires passing the lesson's quiz, checked in the database. The answer keys are also in the project's source code, so the quiz demonstrates engagement rather than being cheat-proof; XP still can't be earned more than once per lesson.
 
 Missions, objectives and achievements follow the same pattern. Each gets a public function that checks its rule server-side, then calls `private.award_xp`. Adjustments are inserted only by an admin using the service role, with `source_id` set to the transaction being corrected.
 

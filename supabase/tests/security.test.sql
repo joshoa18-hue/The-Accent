@@ -11,7 +11,7 @@ begin;
 create extension if not exists pgtap with schema extensions;
 set search_path = public, extensions;
 
-select plan(29);
+select plan(37);
 
 -- ----------------------------------------------------------------- fixtures
 -- Two learners. Creating them in auth.users fires the profile trigger.
@@ -30,6 +30,17 @@ insert into public.lessons (id, module_id, title, xp_reward, published)
 select 'test-planned-lesson', m.id, 'Planned lesson', 40, true
   from public.course_modules m join public.courses c on c.id = m.course_id
  where c.status = 'planned' limit 1;
+-- A published lesson in an open course that has NO quiz (must fail closed).
+insert into public.lessons (id, module_id, title, xp_reward, published)
+select 'test-no-quiz-lesson', m.id, 'No quiz', 40, true
+  from public.course_modules m join public.courses c on c.id = m.course_id
+ where c.status = 'open' limit 1;
+
+-- Answer keys for the test lessons.
+insert into private.lesson_quiz_answers (lesson_id, question_id, correct_choice_id) values
+  ('test-open-lesson', 'q1', 'a'),
+  ('test-open-lesson', 'q2', 'c'),
+  ('test-planned-lesson', 'q1', 'a');
 
 -- XP for both learners, written as the database owner (as a trusted function would).
 insert into public.xp_transactions (user_id, amount, source_type, source_id, description) values
@@ -74,12 +85,16 @@ select ok(
   'the seed loaded all eight schools'
 );
 
--- Written lessons (Milestone 3): seeded, but not completable until the
--- quiz-checking complete_lesson arrives in checkpoint 2.
+-- Written lessons (Milestone 3): published now that completion checks the quiz.
 select is(
-  (select count(*)::int from public.lessons where id like 'personal-habits-course-1-%' and not published),
+  (select count(*)::int from public.lessons where id like 'personal-habits-course-1-%' and published),
   3,
-  'the three written lessons are seeded, unpublished'
+  'the three written lessons are seeded and published'
+);
+
+select hasnt_function(
+  'public', 'complete_lesson', array['text'],
+  'the old complete_lesson(lesson) that skipped the quiz no longer exists'
 );
 
 select is(
@@ -109,8 +124,8 @@ select throws_ok(
 
 select is(
   (select count(*)::int from public.lessons where id like 'personal-habits-course-1-%'),
-  0,
-  'unpublished lessons are hidden from learners'
+  3,
+  'learners can see published lessons'
 );
 
 select throws_ok(
@@ -155,18 +170,67 @@ select throws_ok(
   'A cannot call the internal award function'
 );
 
-select is(public.complete_lesson('test-open-lesson'), true, 'completing an open lesson awards XP');
-select is(public.complete_lesson('test-open-lesson'), false, 'completing it again awards nothing');
+-- Completing a lesson: the quiz is checked in the database (migration 6).
+select is(
+  public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "b"}') -> 'wrong',
+  '["q2"]'::jsonb,
+  'a wrong answer fails, naming the question to review'
+);
+select is(
+  (select count(*)::int from public.xp_transactions where source_id = 'test-open-lesson'),
+  0,
+  'a failed quiz awards no XP'
+);
+select is(
+  public.complete_lesson('test-open-lesson', '{"q1": "a"}') -> 'wrong',
+  '["q2"]'::jsonb,
+  'an unanswered question counts as wrong'
+);
+select is(
+  public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c", "extra": "x"}'),
+  '{"passed": true, "wrong": [], "awarded": true, "xp": 40}'::jsonb,
+  'all answers correct: the lesson is completed and XP awarded'
+);
+select is(
+  public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c"}'),
+  '{"passed": true, "wrong": [], "awarded": false, "xp": 0}'::jsonb,
+  'passing again awards nothing'
+);
 select is(
   (select sum(amount)::int from public.xp_transactions where source_id = 'test-open-lesson'),
   40,
   'the amount came from the lessons table, exactly once'
 );
+select is(
+  (select count(*)::int from public.lesson_completions where lesson_id = 'test-open-lesson'),
+  1,
+  'the completion is recorded once'
+);
 
 select throws_ok(
-  $$ select public.complete_lesson('test-planned-lesson') $$,
+  $$ select public.complete_lesson('test-planned-lesson', '{"q1": "a"}') $$,
   'P0002', null,
   'lessons in planned courses cannot be completed'
+);
+select throws_ok(
+  $$ select public.complete_lesson('test-no-quiz-lesson', '{}') $$,
+  'P0002', null,
+  'a lesson without an answer key cannot be completed (fails closed)'
+);
+select throws_ok(
+  $$ select public.complete_lesson('test-open-lesson', '["a", "c"]') $$,
+  '22023', null,
+  'answers that are not an object are rejected'
+);
+
+-- ------------------------------------------------------- 2b. learner B
+select set_config('request.jwt.claims',
+  '{"sub": "00000000-0000-4000-a000-00000000000b", "role": "authenticated"}', true);
+
+select is(
+  public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c"}') -> 'awarded',
+  'true'::jsonb,
+  'each learner earns a lesson''s XP for themselves (B is not blocked by A)'
 );
 
 -- ------------------------------------------------------- 3. not signed in
@@ -181,7 +245,7 @@ select throws_ok(
 );
 
 select throws_ok(
-  $$ select public.complete_lesson('test-open-lesson') $$,
+  $$ select public.complete_lesson('test-open-lesson', '{"q1": "a", "q2": "c"}') $$,
   '42501', null,
   'anonymous visitors cannot complete lessons'
 );

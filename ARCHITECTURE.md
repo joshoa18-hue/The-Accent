@@ -112,7 +112,8 @@ xp_transactions ─► sumXp() ─► total XP ─► getLevelProgress(CHARACTER
 - **Content as data.** Lessons are typed objects in `src/content/catalogue/lessons/`: a list of blocks (`heading`, `paragraph`, `keyIdea`, `quote`, `list`, `reflection`) plus a quiz. `LessonBlocks` has one renderer per block type, enforced by a `Record` over the block-type union. Text is always rendered as text; there's no `dangerouslySetInnerHTML`.
 - **Public reading.** `/lessons/[lessonId]` is prebuilt for every written lesson; unknown ids get a real 404 from the Proxy.
 - **Answer keys never reach the browser.** `src/lib/data/lessons.ts` is `server-only`, and pages receive `toPublicQuiz()` output with answers stripped (tested, and checked in the raw HTML). In the database, keys live in `private.lesson_quiz_answers`, a schema the API doesn't expose and no learner role can read.
-- **Seeded unpublished.** `scripts/seed-sql.ts` sets `LESSONS_PUBLISHED = false` until the quiz-checking `complete_lesson` exists (Milestone 3, checkpoint 2), so the old function can't award XP for them.
+- **Completing a lesson** (checkpoint 2): `QuizForm` → `submitQuiz` Server Action → `supabase.rpc("complete_lesson", { p_lesson_id, p_answers })`. The **database** checks the answers against `private.lesson_quiz_answers`, records the completion and awards XP once, in one transaction. The action only cleans input (`readQuizAnswers`), validates the reply (`parseCompletionResult`), returns explanations *after* a pass, and calls `updateTag(LEARNER_DATA_TAG)`. Signed-out visitors see the questions read-only with a sign-in link (`QuizSection`).
+- **Course progress** is derived, not stored: `buildLearningActivities()` combines `lesson_completions` with the catalogue (completed ÷ *planned* lessons; next lesson = first not completed). It feeds Continue Learning, Current Learning and the ✓ ticks in course outlines.
 
 ## 6a. Authentication
 

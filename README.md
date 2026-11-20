@@ -11,7 +11,7 @@ A lifelong personal learning academy styled as an educational RPG. You study acr
 | Dashboard: welcome, character profile, level and XP, attributes, daily missions, weekly objectives, current learning, achievements, continue learning, the eight schools | `/` | Signed in |
 | Character sheet: level, XP, attributes, mastery, achievements, XP history, **profile editing** | `/character` | Signed in |
 | Schools index and eight school pages with expandable course outlines | `/schools`, `/schools/[slug]` | Public |
-| Lessons: reading, plus a read-only quiz (answering arrives in Milestone 3, checkpoint 2) | `/lessons/[lessonId]` | Public |
+| Lessons: reading for everyone; the quiz (which earns XP) for signed-in learners | `/lessons/[lessonId]` | Public (quiz: signed in) |
 | Sign in (magic link) and sign out | `/login`, `/auth/confirm`, `/auth/signout` | Public |
 | Web app manifest and icons (installable, no offline mode yet) | `/manifest.webmanifest` | Public |
 
@@ -100,14 +100,15 @@ With `npm run db:start` running, use `npm run build && npm run start` (or `npm r
 1. **Signed out:** `/` and `/character` redirect to `/login`; `/schools`, **every school page** and every lesson open; `/schools/not-a-school` and `/lessons/not-a-lesson` return **404**.
 2. **Sign in** with a made-up address such as `a@example.test`, using the link from the mail catcher at http://127.0.0.1:55324. You land on the page you asked for.
 3. **New learner:** the dashboard shows level 1, 0 XP, missions "Not started", achievements locked, **no "Sample data" label**, and "No XP yet" in the XP history.
-4. **Profile:** on `/character`, an empty display name shows "Enter a display name."; a valid one shows **Saved**, and the dashboard greets you by the new name on its first load (production build).
-5. **Sign out:** you land on `/login`. Pressing **Back** doesn't show the previous learner's page, and View Source contains no trace of their name or email.
-6. **Two learners:** sign in as `b@example.test`. They see only their own fresh character, nothing of A's.
-7. **Reused email link:** "That sign-in link is invalid or has expired."
-8. **Responsive:** at ≥1024px the sidebar shows; below that, the bottom tab bar and the header Sign in / Sign out button, with no sideways scrolling at 375px.
-9. **Course outlines** expand and collapse with a click and with **Tab + Enter**; `/schools/x#course-y` opens that course.
-10. **Security headers** (DevTools → Network): `Content-Security-Policy`, `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`, and no `X-Powered-By`. The Console shows no "Refused to…" CSP messages.
-11. **Manifest** (DevTools → Application → Manifest): "The Ascent" and three icons, no errors.
+4. **Lessons:** open `/lessons/personal-habits-course-1-1`. Signed out, the quiz is read-only with a sign-in link. Signed in: a blank answer says "Choose an answer"; a wrong answer is flagged with no XP; all correct shows **+40 XP**, then explanations; submitting again adds nothing. The dashboard then shows the course in Continue Learning, and the outline marks the lesson (completed).
+5. **Profile:** on `/character`, an empty display name shows "Enter a display name."; a valid one shows **Saved**, and the dashboard greets you by the new name on its first load (production build).
+6. **Sign out:** you land on `/login`. Pressing **Back** doesn't show the previous learner's page, and View Source contains no trace of their name or email.
+7. **Two learners:** sign in as `b@example.test`. They see only their own fresh character, nothing of A's.
+8. **Reused email link:** "That sign-in link is invalid or has expired."
+9. **Responsive:** at ≥1024px the sidebar shows; below that, the bottom tab bar and the header Sign in / Sign out button, with no sideways scrolling at 375px.
+10. **Course outlines** expand and collapse with a click and with **Tab + Enter**; `/schools/x#course-y` opens that course.
+11. **Security headers** (DevTools → Network): `Content-Security-Policy`, `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`, and no `X-Powered-By`. The Console shows no "Refused to…" CSP messages.
+12. **Manifest** (DevTools → Application → Manifest): "The Ascent" and three icons, no errors.
 
 ## Project documentation
 

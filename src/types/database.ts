@@ -292,7 +292,7 @@ isOneToOne: false
           }
           Functions: {
             "complete_lesson":
-{ Args: { "p_lesson_id": string }; Returns: boolean
+{ Args: { "p_answers": Json,"p_lesson_id": string }; Returns: Json
                            }
           }
           Enums: {

@@ -34,6 +34,8 @@ export interface LearningActivity {
   /** 0–100 */
   progressPercent: number;
   lastStudiedAt: string;
+  /** The next written lesson not yet completed, if there is one. */
+  nextLesson?: { id: string; title: string };
 }
 
 /**

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { BookOpen, ChevronDown } from "lucide-react";
+import { BookOpen, CheckCircle2, ChevronDown } from "lucide-react";
 import { Badge, type BadgeTone } from "@/components/ui/Badge";
 import type { LessonLink } from "@/lib/data/lessons";
 import { courseAnchorId, routes } from "@/lib/routes";
@@ -25,6 +25,8 @@ type CourseAccordionProps = {
   course: Course;
   /** Written lessons by module id. Modules without an entry have none yet. */
   lessonsByModule?: Readonly<Record<string, readonly LessonLink[]>>;
+  /** Lessons the signed-in learner has completed (empty when signed out). */
+  completedLessonIds?: readonly string[];
 };
 
 /**
@@ -36,7 +38,7 @@ type CourseAccordionProps = {
  * Tailwind's `group-open:` styles react to the <details open> attribute.
  * Written lessons appear as links under their module.
  */
-export function CourseAccordion({ course, lessonsByModule = {} }: CourseAccordionProps) {
+export function CourseAccordion({ course, lessonsByModule = {}, completedLessonIds = [] }: CourseAccordionProps) {
   const status = statusBadges[course.status];
   const lessons = plannedLessonCount(course);
   const written = course.modules.reduce((sum, module) => sum + (lessonsByModule[module.id]?.length ?? 0), 0);
@@ -85,20 +87,28 @@ export function CourseAccordion({ course, lessonsByModule = {} }: CourseAccordio
                 </div>
                 {moduleLessons.length > 0 ? (
                   <ul className="mt-2 space-y-1 pl-10">
-                    {moduleLessons.map((lesson) => (
-                      <li key={lesson.id}>
-                        <Link
-                          href={routes.lesson(lesson.id)}
-                          className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-gold-300 transition-colors hover:bg-charcoal-800/70 hover:text-gold-200"
-                        >
-                          <BookOpen aria-hidden className="size-3.5 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            {lesson.order}. {lesson.title}
-                          </span>
-                          <span className="shrink-0 text-xs text-slate-dim">{lesson.minutes} min</span>
-                        </Link>
-                      </li>
-                    ))}
+                    {moduleLessons.map((lesson) => {
+                      const completed = completedLessonIds.includes(lesson.id);
+                      return (
+                        <li key={lesson.id}>
+                          <Link
+                            href={routes.lesson(lesson.id)}
+                            className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-gold-300 transition-colors hover:bg-charcoal-800/70 hover:text-gold-200"
+                          >
+                            {completed ? (
+                              <CheckCircle2 aria-hidden className="size-3.5 shrink-0 text-emerald-soft" />
+                            ) : (
+                              <BookOpen aria-hidden className="size-3.5 shrink-0" />
+                            )}
+                            <span className="min-w-0 flex-1">
+                              {lesson.order}. {lesson.title}
+                              {completed ? <span className="sr-only"> (completed)</span> : null}
+                            </span>
+                            <span className="shrink-0 text-xs text-slate-dim">{lesson.minutes} min</span>
+                          </Link>
+                        </li>
+                      );
+                    })}
                   </ul>
                 ) : null}
               </li>

@@ -1,9 +1,11 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, ChevronRight, Clock, Sparkles } from "lucide-react";
 import { SchoolIcon } from "@/components/icons/AppIcons";
 import { LessonBlocks } from "@/components/lessons/LessonBlocks";
 import { QuizPreview } from "@/components/lessons/QuizPreview";
+import { QuizSection } from "@/components/lessons/QuizSection";
 import { Panel } from "@/components/ui/Panel";
 import { getLessonPage, type LessonLink } from "@/lib/data/lessons";
 import { routes } from "@/lib/routes";
@@ -85,7 +87,10 @@ export async function LessonDetails({ params }: Pick<PageProps<"/lessons/[lesson
       </div>
 
       <Panel id="lesson-quiz" eyebrow="Check your understanding" title="Lesson Quiz">
-        <QuizPreview questions={quiz} />
+        {/* Reads the session, so it streams in; the read-only questions show meanwhile. */}
+        <Suspense fallback={<QuizPreview questions={quiz} />}>
+          <QuizSection lessonId={lesson.id} questions={quiz} xpReward={lesson.xpReward} />
+        </Suspense>
       </Panel>
 
       {previous || next ? (

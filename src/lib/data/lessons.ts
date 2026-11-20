@@ -54,6 +54,26 @@ export async function getLessonIds(): Promise<string[]> {
   return catalogueLessons.map((lesson) => lesson.id);
 }
 
+/**
+ * The explanation for each question of a lesson, by question id.
+ * ONLY call this after the database has confirmed the learner passed: an
+ * explanation gives the answer away.
+ */
+export async function getQuizExplanations(lessonId: string): Promise<Record<string, string>> {
+  const lesson = catalogueLessons.find((candidate) => candidate.id === lessonId);
+  return Object.fromEntries((lesson?.quiz ?? []).map((question) => [question.id, question.explanation]));
+}
+
+/** All written lessons as links with their course, for building course progress. */
+export async function getAllLessonLinks(): Promise<(LessonLink & Pick<Lesson, "courseId" | "moduleId" | "schoolSlug">)[]> {
+  return lessonsInOrder().map((lesson) => ({
+    ...toLink(lesson),
+    courseId: lesson.courseId,
+    moduleId: lesson.moduleId,
+    schoolSlug: lesson.schoolSlug,
+  }));
+}
+
 /** Written lessons grouped by module id, for course outlines. */
 export async function getLessonLinksByModule(): Promise<DataResult<Record<string, LessonLink[]>>> {
   const byModule: Record<string, LessonLink[]> = {};

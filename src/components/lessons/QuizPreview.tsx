@@ -1,14 +1,13 @@
+import type { ReactNode } from "react";
 import type { PublicQuizQuestion } from "@/types/lesson";
 
 /**
- * The lesson's check-your-understanding questions, shown READ-ONLY.
- *
- * There are deliberately no radio buttons or submit button yet: answering and
- * earning XP arrive in the next checkpoint, when the database can check the
- * answers. Until then nothing here may look clickable (project rule 1).
- * It receives questions WITHOUT answers (PublicQuizQuestion).
+ * The lesson's questions, shown READ-ONLY (for visitors who aren't signed in).
+ * There are deliberately no radio buttons or submit button: nothing here may
+ * look clickable (project rule 1). `footer` explains how to take part, e.g. a
+ * sign-in link. It receives questions WITHOUT answers (PublicQuizQuestion).
  */
-export function QuizPreview({ questions }: { questions: readonly PublicQuizQuestion[] }) {
+export function QuizPreview({ questions, footer }: { questions: readonly PublicQuizQuestion[]; footer?: ReactNode }) {
   return (
     <div>
       <ol className="space-y-5">
@@ -30,9 +29,9 @@ export function QuizPreview({ questions }: { questions: readonly PublicQuizQuest
           </li>
         ))}
       </ol>
-      <p className="mt-5 rounded-lg border border-charcoal-700 bg-charcoal-900/70 p-3 text-sm text-slate-dim">
-        Answering these questions and earning XP for this lesson is coming in the next update.
-      </p>
+      {footer ? (
+        <div className="mt-5 rounded-lg border border-charcoal-700 bg-charcoal-900/70 p-3 text-sm text-slate-dim">{footer}</div>
+      ) : null}
     </div>
   );
 }

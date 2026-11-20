@@ -12,12 +12,11 @@ import { catalogueLessons } from "../src/content/catalogue/lessons/index.ts";
 import { catalogueSchools } from "../src/content/catalogue/schools.ts";
 
 /**
- * Whether written lessons are marked `published` in the database.
- * FALSE until Milestone 3 checkpoint 2: the current complete_lesson() awards
- * XP for any published lesson without checking a quiz, so lessons stay
- * unpublishable (and un-completable) until the quiz-checking version exists.
+ * Whether written lessons are marked `published` in the database (i.e. can
+ * be completed). They were held back (false) in Milestone 3 checkpoint 1 until
+ * complete_lesson(lesson, answers) could check the quiz; now it does.
  */
-const LESSONS_PUBLISHED = false;
+const LESSONS_PUBLISHED = true;
 import {
   sampleAchievements,
   sampleDailyMissions,

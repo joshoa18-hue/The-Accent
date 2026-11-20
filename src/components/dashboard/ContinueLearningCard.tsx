@@ -6,9 +6,9 @@ import { routes } from "@/lib/routes";
 import type { LearningActivityView } from "@/types/activity";
 
 /**
- * Points the learner at the course they studied most recently.
- * The link opens the course outline on its school page. Lessons themselves
- * arrive in a later milestone, so we don't pretend to start one.
+ * Points the learner at the course they studied most recently, with a link
+ * straight to the next lesson they haven't completed. When every written
+ * lesson is done, it links to the course outline instead.
  */
 export function ContinueLearningCard({ activity }: { activity: LearningActivityView | undefined }) {
   return (
@@ -22,7 +22,7 @@ export function ContinueLearningCard({ activity }: { activity: LearningActivityV
             <div className="min-w-0">
               <p className="text-xs text-slate-dim">{activity.school.shortName}</p>
               <p className="font-display text-lg font-semibold leading-snug">{activity.course.title}</p>
-              <p className="mt-0.5 text-sm text-mist">Next: {activity.currentModuleTitle}</p>
+              <p className="mt-0.5 text-sm text-mist">Module: {activity.currentModuleTitle}</p>
             </div>
           </div>
           <ProgressBar
@@ -32,13 +32,19 @@ export function ContinueLearningCard({ activity }: { activity: LearningActivityV
             label={`${activity.course.title} course progress`}
           />
           <p className="mt-2 text-xs text-slate-dim">{activity.progressPercent}% of course complete</p>
-          <ArrowLink
-            variant="button"
-            href={routes.course(activity.school.slug, activity.course.id)}
-            className="mt-5 self-start"
-          >
-            View course outline
-          </ArrowLink>
+          {activity.nextLesson ? (
+            <ArrowLink variant="button" href={routes.lesson(activity.nextLesson.id)} className="mt-5 self-start">
+              Continue: {activity.nextLesson.title}
+            </ArrowLink>
+          ) : (
+            <ArrowLink
+              variant="button"
+              href={routes.course(activity.school.slug, activity.course.id)}
+              className="mt-5 self-start"
+            >
+              View course outline
+            </ArrowLink>
+          )}
         </div>
       ) : (
         <div>

@@ -12,6 +12,7 @@ import { ArrowLink } from "@/components/ui/ArrowLink";
 import { getCurrentUser } from "@/lib/auth/session";
 import { getCharacterSummary } from "@/lib/data/character";
 import { getLessonLinksByModule } from "@/lib/data/lessons";
+import { getLessonCompletions } from "@/lib/data/progress";
 import { getSchoolBySlug } from "@/lib/data/schools";
 import { combineSources } from "@/lib/data/source";
 import { ATTRIBUTES } from "@/lib/progression/attributes";
@@ -39,7 +40,10 @@ export async function SchoolDetails({ params }: Pick<PageProps<"/schools/[slug]"
 
   // School pages are PUBLIC. Learner data is only loaded for a signed-in
   // learner; for everyone else the mastery panel invites them to sign in.
-  const character = user ? await getCharacterSummary() : null;
+  const [character, completions] = user
+    ? await Promise.all([getCharacterSummary(), getLessonCompletions()])
+    : [null, null];
+  const completedLessonIds = completions?.data.map((completion) => completion.lessonId) ?? [];
 
   const courses = school.categories.flatMap((category) => category.courses);
   const lessons = courses.reduce((sum, course) => sum + plannedLessonCount(course), 0);
@@ -110,7 +114,11 @@ export async function SchoolDetails({ params }: Pick<PageProps<"/schools/[slug]"
               <ul className="space-y-3">
                 {category.courses.map((course) => (
                   <li key={course.id}>
-                    <CourseAccordion course={course} lessonsByModule={lessonLinks.data} />
+                    <CourseAccordion
+                      course={course}
+                      lessonsByModule={lessonLinks.data}
+                      completedLessonIds={completedLessonIds}
+                    />
                   </li>
                 ))}
               </ul>

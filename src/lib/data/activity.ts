@@ -10,7 +10,11 @@
  */
 import "server-only";
 import { cacheLife, cacheTag } from "next/cache";
+import { catalogueSchools } from "@/content/catalogue/schools";
+import { buildLearningActivities } from "@/lib/progression/course-progress";
 import { createSupabaseDataClient } from "@/lib/supabase/server";
+import { getAllLessonLinks } from "./lessons";
+import { getLessonCompletions } from "./progress";
 import type { Achievement, DailyMission, LearningActivityView, WeeklyObjective } from "@/types/activity";
 import type { DataResult } from "@/types/data";
 import { LEARNER_DATA_TAG } from "./cache-tags";
@@ -46,12 +50,12 @@ export async function getWeeklyObjectives(): Promise<DataResult<WeeklyObjective[
 }
 
 /**
- * Courses in progress. Progress comes from completed lessons, and lesson
- * content arrives in Milestone 3, so for now this is honestly empty: the
- * dashboard shows "You haven't started a course yet".
+ * Courses in progress, built from the learner's completed lessons and the
+ * written lessons in the catalogue (see buildLearningActivities).
  */
 export async function getLearningActivities(): Promise<DataResult<LearningActivityView[]>> {
-  return { data: [], source: "database" };
+  const [{ data: completions }, lessons] = await Promise.all([getLessonCompletions(), getAllLessonLinks()]);
+  return { data: buildLearningActivities(completions, lessons, catalogueSchools), source: "database" };
 }
 
 export async function getAchievements(): Promise<DataResult<Achievement[]>> {
