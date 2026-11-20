@@ -12,17 +12,17 @@ Each milestone ends with working, tested software and a development report in [d
 - Responsive shell (desktop sidebar, mobile tab bar), web app manifest and icons
 - Documentation and learning lessons
 
-## Milestone 2 — Accounts and real data (Supabase)
+## ✅ Milestone 2 — Accounts and real data (Supabase) *(complete)*
 
 **Goal:** a real learner can sign in and see their own progress, stored securely.
 
 1. ✅ **Supabase project and local development.** Set up the Supabase CLI, migrations in `supabase/migrations/`, and seed data generated from today's sample files. *(Checkpoint 1)*
 2. ✅ **Schema and Row Level Security** as designed in [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md), with 24 database security tests. *(Checkpoint 1)*
 3. ✅ **Authentication.** Email magic link via `@supabase/ssr`, with sessions refreshed in `src/proxy.ts`, and the dashboard and character pages protected. *(Checkpoint 2)*
-4. **Data layer swap.** Each `src/lib/data/*` function reads from Supabase and returns `source: "database"`. No component changes are expected. That's the point of the contract.
-5. **Profiles.** Display name and title, editable through a validated Server Action.
+4. ✅ **Data layer swap.** Learner data reads from Supabase (`source: "database"`); the curriculum became real catalogue content (`source: "catalogue"`). No display component's props changed. *(Checkpoint 3)*
+5. ✅ **Profiles.** Display name and title, editable through a validated Server Action. *(Checkpoint 3)*
 6. **Security hardening:**
-   - A **Content-Security-Policy** header that locks down sources, framing, objects, base URI and form targets. *Not* nonce-based: the bundled Next.js docs say nonces force every page to render per request, which would switch off static rendering. Scripts will need `'unsafe-inline'`, a documented trade-off. Start in report-only mode, then enforce.
+   - ✅ A **Content-Security-Policy**, trialled in report-only mode with zero violations, then enforced. Not nonce-based (see ARCHITECTURE §8). *(Checkpoint 3)*
    - ✅ `server-only` on every module that creates a Supabase client; the web app never uses the service-role key. *(Checkpoint 2)*
    - ✅ Input validation on the sign-in Server Action. Rate limiting of sign-in emails comes from Supabase Auth. *(Checkpoint 2)*
    - ✅ A true 404 status for unknown school slugs, via a slug check in `src/proxy.ts`. *(Checkpoint 2)*
@@ -57,8 +57,9 @@ Each milestone ends with working, tested software and a development report in [d
 
 | Limitation | Planned fix |
 |---|---|
-| No Content-Security-Policy | Milestone 2, checkpoint 3 |
-| Signed-in learners still see sample progress | Milestone 2, checkpoint 3 |
+| CSP allows `'unsafe-inline'` scripts (needed for static rendering) | Revisit if Next.js offers hash-based CSP for inline scripts |
+| "Current learning" is always empty (no lesson content yet) | Milestone 3 |
+| Development mode can show one stale load right after saving a profile (production verified correct) | None needed; dev-only cache behaviour |
 | The laptop's 3.4 GB of RAM can't run Docker and a production build at once | Stop Docker before `npm run build`, or add RAM |
 | No offline support (manifest only) | Milestone 3 |
-| All data is sample data; missions, courses and achievements are display-only | Milestones 2–3 |
+| Missions, objectives and achievements are display-only | Milestone 3 |

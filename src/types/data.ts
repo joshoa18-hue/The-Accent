@@ -1,9 +1,10 @@
 /**
  * Where a piece of data came from.
- * - "sample":   placeholder data written by hand (Milestone 1)
- * - "database": real data loaded from Supabase (Milestone 2 onwards)
+ * - "sample":    placeholder data written by hand. Pages using it show a label.
+ * - "catalogue": real curriculum content kept in the codebase (src/content/catalogue/)
+ * - "database":  real data loaded from Supabase for the signed-in learner
  */
-export type DataSource = "sample" | "database";
+export type DataSource = "sample" | "catalogue" | "database";
 
 /**
  * Every data-layer function returns its data wrapped with its source.

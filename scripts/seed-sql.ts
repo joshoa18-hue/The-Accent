@@ -8,7 +8,7 @@
  * Imports are relative with a .ts extension because Node runs this file
  * directly (Node 24 strips the types); it does not understand the "@/" alias.
  */
-import { sampleSchools } from "../src/content/sample/schools.ts";
+import { catalogueSchools } from "../src/content/catalogue/schools.ts";
 import {
   sampleAchievements,
   sampleDailyMissions,
@@ -41,7 +41,7 @@ export function buildSeedSql(): string {
   const courses: SqlValue[][] = [];
   const modules: SqlValue[][] = [];
 
-  sampleSchools.forEach((school, schoolIndex) => {
+  catalogueSchools.forEach((school, schoolIndex) => {
     schools.push([
       school.slug, school.name, school.shortName, school.tagline,
       school.description, school.icon, school.primaryAttribute, schoolIndex,

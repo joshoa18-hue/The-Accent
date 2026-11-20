@@ -15,6 +15,14 @@ const sourceLabels: Record<XpTransaction["sourceType"], string> = {
  * level, attribute and mastery number on this page is calculated from.
  */
 export function XpHistory({ transactions }: { transactions: XpTransaction[] }) {
+  if (transactions.length === 0) {
+    return (
+      <p className="text-sm text-mist">
+        No XP yet. Every lesson, mission and achievement you complete will be recorded here.
+      </p>
+    );
+  }
+
   return (
     <ul className="divide-y divide-charcoal-800">
       {transactions.map((tx) => {

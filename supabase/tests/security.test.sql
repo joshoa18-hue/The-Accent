@@ -15,9 +15,11 @@ select plan(24);
 
 -- ----------------------------------------------------------------- fixtures
 -- Two learners. Creating them in auth.users fires the profile trigger.
+-- The addresses use the reserved .invalid domain, so they can never clash
+-- with accounts created while testing the app in a browser.
 insert into auth.users (id, email, raw_user_meta_data) values
-  ('00000000-0000-4000-a000-00000000000a', 'learner-a@example.test', '{"display_name": "Ada"}'),
-  ('00000000-0000-4000-a000-00000000000b', 'learner-b@example.test', '{"display_name": "   "}');
+  ('00000000-0000-4000-a000-00000000000a', 'rls-test-a@pgtap.invalid', '{"display_name": "Ada"}'),
+  ('00000000-0000-4000-a000-00000000000b', 'rls-test-b@pgtap.invalid', '{"display_name": "   "}');
 
 -- One published lesson in an OPEN course and one in a PLANNED course.
 insert into public.lessons (id, module_id, title, xp_reward, published)

@@ -5,6 +5,7 @@ import { AttributeList } from "@/components/character/AttributeList";
 import { CharacterEmblem } from "@/components/character/CharacterEmblem";
 import { LevelSummary } from "@/components/character/LevelSummary";
 import { MasteryList } from "@/components/character/MasteryList";
+import { ProfileForm } from "@/components/character/ProfileForm";
 import { XpHistory } from "@/components/character/XpHistory";
 import { Panel } from "@/components/ui/Panel";
 import { SampleDataNotice } from "@/components/ui/SampleDataNotice";
@@ -77,6 +78,10 @@ async function CharacterContent() {
           </Panel>
         </div>
       </div>
+
+      <Panel id="profile-settings" eyebrow="You" title="Your Profile" className="max-w-xl">
+        <ProfileForm displayName={profile.displayName} title={profile.title} />
+      </Panel>
     </div>
   );
 }

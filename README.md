@@ -2,17 +2,17 @@
 
 A lifelong personal learning academy styled as an educational RPG. You study across **eight schools**, earn **XP** and level up a character, whose six attributes and per-school mastery grow with what you learn.
 
-> **Status: Milestone 1 — interface foundation.** Everything you see runs on clearly labelled **sample data**. There is no login and no database yet, and nothing you click awards XP. See [ROADMAP.md](ROADMAP.md).
+> **Status: Milestone 2 — accounts and real data.** Learners sign in with an emailed link and see their **own** progress, stored in Supabase and protected by Row Level Security. Nothing in the app awards XP yet; that's Milestone 3. See [ROADMAP.md](ROADMAP.md).
 
-## What's in Milestone 1
+## What's in the app
 
-| Area | Route |
-|---|---|
-| Dashboard: welcome, character profile, level and XP, attributes, daily missions, weekly objectives, current learning, achievements, continue learning, the eight schools | `/` |
-| Schools index | `/schools` |
-| Eight school pages with course categories and expandable course outlines | `/schools/[slug]` |
-| Character sheet: level, XP, attributes, mastery, achievements, XP history | `/character` |
-| Web app manifest and icons (installable, no offline mode yet) | `/manifest.webmanifest` |
+| Area | Route | Access |
+|---|---|---|
+| Dashboard: welcome, character profile, level and XP, attributes, daily missions, weekly objectives, current learning, achievements, continue learning, the eight schools | `/` | Signed in |
+| Character sheet: level, XP, attributes, mastery, achievements, XP history, **profile editing** | `/character` | Signed in |
+| Schools index and eight school pages with expandable course outlines | `/schools`, `/schools/[slug]` | Public |
+| Sign in (magic link) and sign out | `/login`, `/auth/confirm`, `/auth/signout` | Public |
+| Web app manifest and icons (installable, no offline mode yet) | `/manifest.webmanifest` | Public |
 
 ## Requirements
 
@@ -29,7 +29,7 @@ npm install
 npm run dev
 ```
 
-Open http://localhost:3000. No environment variables are needed for Milestone 1. `.env.example` lists the ones Milestone 2 will add.
+Open http://localhost:3000. The schools work straight away. Signing in and the private pages need the local database and `.env.local`; see "Local database" and "Signing in locally" below.
 
 ## Scripts
 
@@ -44,9 +44,11 @@ Open http://localhost:3000. No environment variables are needed for Milestone 1.
 | `npm run test:watch` | Tests in watch mode |
 | `npm run check` | **All of the above in order.** Run before every commit. |
 
-### Local database (Milestone 2)
+### Local database
 
-The app still runs on sample data without a database. To work on the database you need **Docker Desktop** running (on Windows: installed for all users, with WSL 2).
+The private pages read from a local Supabase database, which needs **Docker Desktop** running (on Windows: installed for all users, with WSL 2).
+
+> **Low-memory machines (about 4 GB of RAM):** Docker and a production build don't fit together. Stop Docker (`docker desktop stop`) before `npm run check` or `npm run build`, then start it again afterwards.
 
 | Command | What it does |
 |---|---|
@@ -79,23 +81,32 @@ npm run check
 It must finish without errors. The checks cover:
 
 - **Lint and types.** Code style and type safety.
-- **Tests.** The level curve, the XP ledger (including corrections and whole-number checks), the integrity of the sample data, the data layer, navigation matching, and components. The components are tested by role and text, and there are tests that fail if a fake button appears.
-- **Build.** Every page prerenders: `/`, `/schools`, `/character` and all eight school pages.
+- **Tests.** The level curve, the XP ledger, catalogue integrity, the database-row mappers, profile and email validation, the open-redirect guard, the key check, the CSP builder, navigation matching, and components (queried by role and text, including tests that fail if a fake button appears).
+- **Build.** The public pages prerender; the private pages stream their content after checking the session.
+
+Then, with the database running:
+
+```bash
+npm run db:test
+```
+
+This runs **24 database security tests**: Row Level Security, privileges, and the XP award rules.
 
 ### 2. Manual, in a browser
 
-Run `npm run build && npm run start` (or `npm run dev`) and check:
+With `npm run db:start` running, use `npm run build && npm run start` (or `npm run dev`) and check:
 
-1. **Dashboard (`/`)** shows all ten sections, plus a "Sample data" label.
-2. **Sidebar (≥1024px wide):** Dashboard, Schools and Character highlight when active, and all eight school links open.
-3. **Mobile (<1024px):** the sidebar is hidden, a bottom tab bar appears, and there's no sideways scrolling at 375px.
-4. **"View course outline"** on the dashboard opens the school page and scrolls to the course with it already expanded.
-5. **Course outlines** expand and collapse with a click, and with **Tab + Enter**.
-6. **`/character`** shows level 8, 3,220 XP and 380 XP to level 9 (sample data).
-7. **`/does-not-exist`** shows the "This path doesn't exist" page.
-8. **No button awards XP or pretends to work.** Missions and courses are display-only.
-9. **Security headers.** In DevTools → Network, open any response: it should have `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`, and no `X-Powered-By`.
-10. **Manifest.** DevTools → Application → Manifest shows "The Ascent" and three icons with no errors.
+1. **Signed out:** `/` and `/character` redirect to `/login`; `/schools` and every school page open; `/schools/not-a-school` returns **404**.
+2. **Sign in** with a made-up address such as `a@example.test`, using the link from the mail catcher at http://127.0.0.1:55324. You land on the page you asked for.
+3. **New learner:** the dashboard shows level 1, 0 XP, missions "Not started", achievements locked, **no "Sample data" label**, and "No XP yet" in the XP history.
+4. **Profile:** on `/character`, an empty display name shows "Enter a display name."; a valid one shows **Saved**, and the dashboard greets you by the new name on its first load (production build).
+5. **Sign out:** you land on `/login`. Pressing **Back** doesn't show the previous learner's page, and View Source contains no trace of their name or email.
+6. **Two learners:** sign in as `b@example.test`. They see only their own fresh character, nothing of A's.
+7. **Reused email link:** "That sign-in link is invalid or has expired."
+8. **Responsive:** at ≥1024px the sidebar shows; below that, the bottom tab bar and the header Sign in / Sign out button, with no sideways scrolling at 375px.
+9. **Course outlines** expand and collapse with a click and with **Tab + Enter**; `/schools/x#course-y` opens that course.
+10. **Security headers** (DevTools → Network): `Content-Security-Policy`, `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`, and no `X-Powered-By`. The Console shows no "Refused to…" CSP messages.
+11. **Manifest** (DevTools → Application → Manifest): "The Ascent" and three icons, no errors.
 
 ## Project documentation
 
@@ -103,11 +114,11 @@ Run `npm run build && npm run start` (or `npm run dev`) and check:
 |---|---|
 | [ARCHITECTURE.md](ARCHITECTURE.md) | How the app is structured and why |
 | [ROADMAP.md](ROADMAP.md) | Milestones and what comes next |
-| [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md) | Preliminary Supabase schema and security model |
+| [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md) | The Supabase schema and security model (the SQL lives in `supabase/migrations/`) |
 | [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) | Rules for AI coding assistants working in this repo |
 | [docs/learning/](docs/learning/) | Step-by-step lessons explaining how each part was built |
 | [docs/reports/](docs/reports/) | Milestone development reports |
 
 ## Tech stack
 
-Next.js 16 (App Router, Turbopack, Cache Components) · React 19 · TypeScript (strict) · Tailwind CSS 4 · lucide-react icons · Vitest and React Testing Library. There is deliberately no UI kit, state library or CSS-in-JS.
+Next.js 16 (App Router, Turbopack, Cache Components) · React 19 · TypeScript (strict) · Tailwind CSS 4 · Supabase (Postgres, Auth, Row Level Security) via `@supabase/ssr` · lucide-react icons · Vitest, React Testing Library and pgTAP. There is deliberately no UI kit, state library or CSS-in-JS.

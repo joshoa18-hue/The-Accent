@@ -57,14 +57,22 @@ Interactive behaviour that HTML already provides stays native. Course outlines a
 Every data function is `async` and returns a `DataResult<T>`:
 
 ```ts
-type DataResult<T> = { data: T; source: "sample" | "database" };
+type DataResult<T> = { data: T; source: "sample" | "catalogue" | "database" };
 ```
 
-- **`async` now, even though sample data is synchronous**, so pages already `await` correctly. Swapping in Supabase changes only the function bodies.
-- **`source`** travels with the data. A page combines the sources of everything it shows with `combineSources()`. If *any* part is sample data, `SampleDataNotice` shows the "Sample data" label. The label can't become stale or be forgotten.
+- **`source`** travels with the data. A page combines the sources of everything it shows with `combineSources()`. If *any* part is sample data, `SampleDataNotice` shows the "Sample data" label. Since Milestone 2 nothing on screen is sample data, so the label no longer appears; it would come back automatically if sample data were ever used again.
+- **Two kinds of real data:**
+
+  | Source | What | How it's read |
+  |---|---|---|
+  | `catalogue` | The curriculum: schools, categories, courses, modules | From `src/content/catalogue/` in code. Public, and prebuilt into static pages. |
+  | `database` | One learner's profile, XP ledger, tasks, achievements | From Supabase **as that learner**. Row Level Security returns only their rows. |
+
+- **Learner reads** (`src/lib/data/character.ts`, `activity.ts`) are `"use cache: private"` functions tagged `LEARNER_DATA_TAG`. They run at request time, are shared within one request, and are never stored in a server-wide cache. They use `createSupabaseDataClient()`, which only forwards the learner's access token. It has no session logic of its own, so the functions can run in parallel. (The full session-handling client caused a "use cache awaiting a promise created outside it" error when several ran at once.)
+- **Mappers** (`src/lib/data/mappers.ts`) turn database rows (snake_case) into app types (camelCase). They're pure and unit-tested, so components never see database naming.
+- **Writes** are Server Actions: check the user, validate, write with `createSupabaseServerClient()`, then `updateTag(LEARNER_DATA_TAG)` so the next render shows the change ("read your own writes"). Verified in a production build.
 - **Lookups return `null`** for unknown ids rather than throwing. The page decides what to do, usually `notFound()`.
-- **Views are shaped for the UI.** `getLearningActivities()` returns activities already joined with course and school names. In Milestone 2 that becomes a SQL join.
-- **Read-only.** There is deliberately no function that writes XP. See §5.
+- **No XP writes.** There is deliberately no function that writes XP. See §5.
 
 ## 5. Progression: the XP ledger
 
@@ -115,6 +123,7 @@ Supabase (as that user)    Row Level Security returns only that user's rows
 - **Open-redirect protection.** Every "where next" value goes through `safeNextPath()`, which allows only paths on this site.
 - **No account enumeration.** The sign-in form gives the same reply whether or not an address has an account.
 - **The Proxy is not the security boundary.** It only reads cookies. Every private page calls `requireUser()`, and the database enforces RLS regardless.
+- **Sign-out is a plain form POST to a Route Handler** (`/auth/signout`), not a Server Action. A Server Action's redirect is a soft navigation, and testing found the previous learner's name and email still in the page's hidden, preserved routes afterwards. The Route Handler signs out, checks the `Origin` (so another site can't sign you out), and answers `303` with `Clear-Site-Data: "cache"`. The browser then loads `/login` from scratch and keeps nothing of the old session.
 
 ## 7. Styling
 
@@ -134,8 +143,11 @@ Supabase (as that user)    Row Level Security returns only that user's rows
 | Row Level Security plus revoked privileges on every table, proven by 24 database tests | `supabase/migrations/`, `supabase/tests/` |
 | Supabase code runs only on the server; secret keys are refused | `src/lib/supabase/` |
 | Open-redirect protection and email validation, each unit-tested | `src/lib/auth/` |
+| **Content-Security-Policy, enforced**: `default-src 'self'`, no outside domains, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri` and `form-action 'self'`, and in production no `eval`, no WebSockets and `upgrade-insecure-requests` | `src/lib/security/csp.ts`, `next.config.ts` |
+| Profile input cleaned (control and direction-override characters removed) and length-checked, with matching database `CHECK` constraints | `src/lib/profile/validation.ts` |
+| Sign-out clears in-browser state and can't be triggered cross-site | `src/app/auth/signout/route.ts` |
 
-A Content-Security-Policy is planned for Milestone 2, checkpoint 3 (see ROADMAP.md).
+**CSP trade-off:** `script-src` includes `'unsafe-inline'`, because Next.js inlines small scripts in every page. A per-request nonce would remove that, but the bundled Next.js guide says nonces force every page to render dynamically and are incompatible with the prebuilt static shell. The rest of the policy still blocks loading from, or sending data to, any other site; the browser never talks to Supabase directly, so no outside domain is needed. The policy was trialled in report-only mode with zero violations, then enforced. Set `CSP_MODE` in `next.config.ts` back to `"report-only"` to trial changes.
 
 ## 9. PWA readiness
 

@@ -113,8 +113,8 @@ async function DashboardContent() {
       </Panel>
 
       <p className="text-center text-xs text-slate-dim">
-        Missions, objectives and XP are display-only in Milestone 1. Progress will be recorded by the server once the
-        database is connected.
+        Your progress is loaded from your account. Completing lessons and missions arrives in Milestone 3; until then
+        they&apos;re shown for reference only.
       </p>
     </div>
   );

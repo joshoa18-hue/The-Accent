@@ -1,8 +1,12 @@
 /**
- * ⚠ SAMPLE DATA — Milestone 1
- * The eight schools and an initial curriculum OUTLINE (categories, courses,
- * modules). No lessons are written yet. Only src/lib/data/ may import this
- * file; in Milestone 2 the curriculum moves into the database.
+ * THE CATALOGUE: the eight schools and their curriculum OUTLINE (categories,
+ * courses, modules). This is real content, not sample data, and this file is
+ * its single source of truth:
+ *   - pages read it through src/lib/data/schools.ts;
+ *   - supabase/seed.sql is generated from it (`npm run db:seed`), so the
+ *     database can link progress to real course ids;
+ *   - the Proxy uses it to return a 404 for unknown schools.
+ * No lessons are written yet (Milestone 3).
  */
 import type { CourseModule, School } from "@/types/school";
 
@@ -11,7 +15,7 @@ function mod(id: string, title: string, plannedLessons: number): CourseModule {
   return { id, title, plannedLessons };
 }
 
-export const sampleSchools: School[] = [
+export const catalogueSchools: School[] = [
   {
     slug: "faith-scripture-wisdom",
     name: "Faith, Scripture & Wisdom",

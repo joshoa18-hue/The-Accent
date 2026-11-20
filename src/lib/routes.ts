@@ -13,6 +13,8 @@ export const routes = {
   login: (next?: string) => (next && next !== "/" ? `/login?next=${encodeURIComponent(next)}` : "/login"),
   /** Where the link in the sign-in email lands (see supabase/templates/). */
   authConfirm: () => "/auth/confirm",
+  /** POST here to sign out (src/app/auth/signout/route.ts). */
+  signOut: () => "/auth/signout",
 };
 
 /** The HTML id given to a course on its school page. */

@@ -19,16 +19,20 @@ The project owner is learning web development through this project. For every su
 4. **No unnecessary dependencies.** Ask before adding one, and prefer the platform: native HTML, CSS and Next.js built-ins.
 5. **No destructive operations without approval** (deleting data or files, force-pushing, rewriting history, dropping tables).
 6. **Don't claim something works unless it has been tested.** Run `npm run check`, and check UI changes in a browser.
-7. **Label sample data.** Anything not from the database goes through `src/content/sample/` and shows `SampleDataNotice`.
+7. **Label sample data.** Placeholder data lives in `src/content/sample/` and must show `SampleDataNotice` wherever it's displayed. The curriculum in `src/content/catalogue/` is real content, and learner data comes from the database; neither is labelled.
+8. **Security is layered; never remove a layer.** The Proxy is only an optimistic check. Every private page calls `requireUser()`, and every table keeps Row Level Security plus revoked privileges. A new table must do the same, and `npm run db:test` must stay green.
+9. **Supabase stays on the server.** No `NEXT_PUBLIC_` Supabase variables and no browser client. Only the publishable key is used; `readSupabaseEnv()` refuses secret keys.
 
 ## Architecture in one minute
 
 - `src/app/`: routes. These are Server Components that load data in parallel and compose sections.
-- `src/lib/data/`: the **only** place that knows where data comes from. It returns `DataResult<T>` = `{ data, source }`.
+- `src/lib/data/`: the **only** place that knows where data comes from. It returns `DataResult<T>` = `{ data, source }`. Learner data uses `createSupabaseDataClient()` inside `"use cache: private"` functions tagged `LEARNER_DATA_TAG`; pure row → type conversions live in `mappers.ts`.
+- `src/lib/auth/session.ts`: `getCurrentUser()` / `requireUser()` are the only way to ask "who is this?". Writes go through Server Actions that call `getCurrentUser()`, validate, write with `createSupabaseServerClient()`, then `updateTag(LEARNER_DATA_TAG)`.
+- `src/proxy.ts`: session refresh, optimistic redirects, real 404s for unknown schools.
 - `src/lib/progression/`: pure game rules (levels, ledger, attributes). Keep them pure and tested.
 - `src/components/`: display only. Props in, UI out. `"use client"` only when the browser is truly required.
 - `src/lib/routes.ts`: build every internal URL here.
-- Anything reading `params` or `usePathname` must be inside `<Suspense>` (Cache Components). See ARCHITECTURE.md §6.
+- Anything reading `params`, `usePathname`, cookies or the session must be inside `<Suspense>` (Cache Components). See ARCHITECTURE.md §6.
 
 Full details are in [ARCHITECTURE.md](ARCHITECTURE.md), the plan in [ROADMAP.md](ROADMAP.md), and the database in [docs/DATABASE_DESIGN.md](docs/DATABASE_DESIGN.md).
 
@@ -37,6 +41,7 @@ Full details are in [ARCHITECTURE.md](ARCHITECTURE.md), the plan in [ROADMAP.md]
 ```bash
 npm run dev          # http://localhost:3000
 npm run check        # lint + typecheck + tests + build; must pass before committing
+npm run db:start     # local Supabase (Docker); then npm run db:test for the 24 security tests
 npm run test:watch   # tests while you work
 ```
 

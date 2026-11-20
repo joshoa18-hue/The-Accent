@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { sampleSchools } from "@/content/sample/schools";
+import { catalogueSchools } from "@/content/catalogue/schools";
 import type { CharacterProfile, XpTransaction } from "@/types/progression";
 import { buildCharacterSummary } from "./character";
 
@@ -16,7 +16,7 @@ function lesson(id: string, amount: number, schoolSlug?: XpTransaction["schoolSl
 
 describe("buildCharacterSummary", () => {
   it("gives a brand-new learner level 1 and unranked mastery everywhere", () => {
-    const summary = buildCharacterSummary({ profile, transactions: [], schools: sampleSchools });
+    const summary = buildCharacterSummary({ profile, transactions: [], schools: catalogueSchools });
     expect(summary.level.level).toBe(1);
     expect(summary.level.totalXp).toBe(0);
     expect(summary.mastery).toHaveLength(8);
@@ -33,7 +33,7 @@ describe("buildCharacterSummary", () => {
         lesson("c", 150, "technology-computers-ai"), // intellect
         lesson("d", 50), // a mission-style award with no school: total only
       ],
-      schools: sampleSchools,
+      schools: catalogueSchools,
     });
 
     const attribute = (key: string) => summary.attributes.find((a) => a.key === key)!;
@@ -47,7 +47,7 @@ describe("buildCharacterSummary", () => {
     const summary = buildCharacterSummary({
       profile,
       transactions: [lesson("a", 950, "technology-computers-ai")],
-      schools: sampleSchools,
+      schools: catalogueSchools,
     });
     const tech = summary.mastery.find((m) => m.schoolSlug === "technology-computers-ai")!;
     // Mastery curve: rank 6 starts at 900 XP, rank 7 at 1,260 XP.

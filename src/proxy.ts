@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { sampleSchools } from "@/content/sample/schools";
+import { catalogueSchools } from "@/content/catalogue/schools";
 import { routes } from "@/lib/routes";
 import { refreshSession } from "@/lib/supabase/proxy-session";
 
@@ -15,7 +15,7 @@ import { refreshSession } from "@/lib/supabase/proxy-session";
  * still checks the user itself (requireUser), and the database enforces RLS.
  */
 
-const knownSchoolSlugs = new Set<string>(sampleSchools.map((school) => school.slug));
+const knownSchoolSlugs = new Set<string>(catalogueSchools.map((school) => school.slug));
 
 /** Pages that need a signed-in learner. Everything else is public. */
 const privatePaths = new Set([routes.dashboard(), routes.character()]);

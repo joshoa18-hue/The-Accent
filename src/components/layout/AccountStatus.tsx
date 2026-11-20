@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { LogIn, LogOut } from "lucide-react";
-import { signOut } from "@/app/auth/actions";
 import { getCurrentUser } from "@/lib/auth/session";
 import { routes } from "@/lib/routes";
 import { cn } from "@/lib/utils";
@@ -34,8 +33,12 @@ export async function AccountStatus({ compact = false }: { compact?: boolean }) 
           </span>
         </p>
       )}
-      {/* A <form> with a Server Action: a genuine button that works even without JavaScript. */}
-      <form action={signOut}>
+      {/*
+        A plain HTML form POST (not a Server Action), so the browser does a
+        full page load afterwards and forgets everything from this session.
+        See src/app/auth/signout/route.ts.
+      */}
+      <form action={routes.signOut()} method="post">
         <button
           type="submit"
           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-charcoal-700 px-3 py-1.5 text-xs font-medium text-mist transition-colors hover:border-gold-600/60 hover:text-parchment"
