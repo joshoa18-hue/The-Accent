@@ -155,6 +155,8 @@ Supabase (as that user)    Row Level Security returns only that user's rows
 | **Content-Security-Policy, enforced**: `default-src 'self'`, no outside domains, `object-src 'none'`, `frame-ancestors 'none'`, `base-uri` and `form-action 'self'`, and in production no `eval`, no WebSockets and `upgrade-insecure-requests` | `src/lib/security/csp.ts`, `next.config.ts` |
 | Profile input cleaned (control and direction-override characters removed) and length-checked, with matching database `CHECK` constraints | `src/lib/profile/validation.ts` |
 | Sign-out clears in-browser state and can't be triggered cross-site | `src/app/auth/signout/route.ts` |
+| Session cookies `HttpOnly`, `Secure` (production) and `SameSite=lax`, since no browser code needs them | `src/lib/supabase/cookies.ts` |
+| HSTS in production builds; a friendly error page that never shows error details (only a reference id) | `next.config.ts`, `src/app/error.tsx` |
 
 **CSP trade-off:** `script-src` includes `'unsafe-inline'`, because Next.js inlines small scripts in every page. A per-request nonce would remove that, but the bundled Next.js guide says nonces force every page to render dynamically and are incompatible with the prebuilt static shell. The rest of the policy still blocks loading from, or sending data to, any other site; the browser never talks to Supabase directly, so no outside domain is needed. The policy was trialled in report-only mode with zero violations, then enforced. Set `CSP_MODE` in `next.config.ts` back to `"report-only"` to trial changes.
 

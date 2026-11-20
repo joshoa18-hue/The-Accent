@@ -27,6 +27,12 @@ const securityHeaders = [
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
   // We use none of these browser features, so switch them off.
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
+  // HSTS: once a browser has visited over HTTPS, it refuses plain HTTP for this
+  // site for two years. Production builds only; browsers ignore it over plain
+  // http://localhost anyway.
+  ...(process.env.NODE_ENV === "production"
+    ? [{ key: "Strict-Transport-Security", value: "max-age=63072000" }]
+    : []),
 ];
 
 const nextConfig: NextConfig = {

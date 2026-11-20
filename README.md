@@ -120,6 +120,7 @@ With `npm run db:start` running, use `npm run build && npm run start` (or `npm r
 | [CLAUDE.md](CLAUDE.md) / [AGENTS.md](AGENTS.md) | Rules for AI coding assistants working in this repo |
 | [docs/learning/](docs/learning/) | Step-by-step lessons explaining how each part was built |
 | [docs/WRITING_LESSONS.md](docs/WRITING_LESSONS.md) | How to add a new lesson to the curriculum |
+| [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) | Putting The Ascent online (Supabase + Vercel), step by step |
 | [docs/reports/](docs/reports/) | Milestone development reports |
 
 ## Tech stack

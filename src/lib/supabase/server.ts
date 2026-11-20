@@ -4,6 +4,7 @@ import { createClient } from "@supabase/supabase-js";
 import { cacheLife } from "next/cache";
 import { cookies } from "next/headers";
 import type { Database } from "@/types/database";
+import { sessionCookieOptions } from "./cookies";
 import { readSupabaseEnv } from "./env";
 
 /**
@@ -21,6 +22,7 @@ export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
 
   return createServerClient<Database>(url, publishableKey, {
+    cookieOptions: sessionCookieOptions,
     cookies: {
       getAll() {
         return cookieStore.getAll();

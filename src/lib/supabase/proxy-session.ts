@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import type { Database } from "@/types/database";
+import { sessionCookieOptions } from "./cookies";
 import { readSupabaseEnv } from "./env";
 
 /**
@@ -21,6 +22,7 @@ export async function refreshSession(request: NextRequest) {
   let cacheHeaders: Record<string, string> = {};
 
   const supabase = createServerClient<Database>(url, publishableKey, {
+    cookieOptions: sessionCookieOptions,
     cookies: {
       getAll() {
         return request.cookies.getAll();
