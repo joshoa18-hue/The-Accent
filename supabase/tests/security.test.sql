@@ -8,8 +8,13 @@
 -- claims that auth.uid() reads, exactly as Supabase does for a real request.
 -- =============================================================================
 begin;
+-- Act as the database owner. Locally the runner already is `postgres`; against
+-- a hosted project (`--remote`) it connects as a temporary CLI login role that
+-- can't even use the `extensions` schema where pgTAP lives. All "owner" steps
+-- below therefore use `set local role postgres`, never `reset role`.
+set local role postgres;
 create extension if not exists pgtap with schema extensions;
-set search_path = public, extensions;
+set local search_path = public, extensions;
 
 select plan(50);
 
@@ -302,7 +307,7 @@ select is(
 );
 
 -- ------------------------------------------------------- 2c. thresholds (as the database owner)
-reset role;
+set local role postgres;
 
 -- B completed lessons TODAY above. Add 2 to 30 days ago, leaving YESTERDAY
 -- empty: the longest run is 29 days (2..30 days ago), and today stands alone.
@@ -339,7 +344,7 @@ select is(
 );
 
 -- ------------------------------------------------------- 3. not signed in
-reset role;
+set local role postgres;
 set local role anon;
 select set_config('request.jwt.claims', '{"role": "anon"}', true);
 
@@ -361,6 +366,6 @@ select throws_ok(
   'anonymous visitors cannot read the quiz answer keys'
 );
 
-reset role;
+set local role postgres;
 select * from finish();
 rollback;

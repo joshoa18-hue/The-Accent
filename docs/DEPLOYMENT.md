@@ -16,13 +16,13 @@ A repeatable checklist for putting The Ascent online, using **Supabase** (databa
 
 1. **You:** sign up at supabase.com and create a project:
    - **Name:** `the-ascent`
-   - **Region:** London (`eu-west-2`), or the region nearest you
+   - **Region:** the one nearest you. **Check the Region dropdown before clicking Create**: it can't be changed later. (The Ascent's project uses **US West, Oregon**.)
    - **Database password:** generate a long random one and keep it in your password manager. It's never stored in the repo.
 2. **You:** in a terminal in the project folder, sign the CLI in:
    ```bash
    npx supabase login
    ```
-3. **Claude:** link the project with `npx supabase link --project-ref <ref>`, where the ref is in the project URL. **You** type the database password when asked.
+3. **Claude:** link the project with `npx supabase link --project-ref <ref>`, where the ref is in the project URL. With the current CLI this uses your login and **doesn't ask for the database password**. The ref is stored in `supabase/.temp/`, which is git-ignored.
 4. **Claude:** preview the migrations, then apply them **with the seed** to the empty database:
    ```bash
    npx supabase db push --remote --dry-run
@@ -36,7 +36,25 @@ A repeatable checklist for putting The Ascent online, using **Supabase** (databa
    npx supabase test db --remote
    ```
 
-> **CLI note:** in this version of the Supabase CLI, `db push` and `test db` target the **local** database unless you add `--remote`.
+> **CLI notes** (learned on the first real run):
+> - `db push`, `test db`, `db query` and `db advisors` target the **local** database unless you add `--remote`.
+> - Commands that change or read a hosted project ask "…on project X · production?", defaulting to **No**. Run them where someone can answer, or add `--yes` once the action has been approved.
+> - `test db --remote` runs the tests inside a **Docker** container on your machine, so Docker must be running.
+> - The remote test runner connects as a temporary `cli_login_postgres` role that can't use the `extensions` schema. `supabase/tests/security.test.sql` therefore switches to `postgres` explicitly (`set local role postgres`).
+6. **Claude:** run Supabase's security advisor:
+   ```bash
+   npx supabase db advisors --remote --yes
+   ```
+   Expected: one **accepted** warning, "Signed-In Users Can Execute SECURITY DEFINER Function" for `complete_lesson`. That's intentional: it's the single guarded way to complete a lesson, and the database tests cover its rules. Anything else must be investigated before going live.
+
+### First run: results (20 November 2026)
+
+| Check | Result |
+|---|---|
+| `db push --remote --include-seed` on an empty project | ✅ all 7 migrations and the seed applied (**first full rebuild from scratch**) |
+| `test db --remote` | ✅ 50/50 (after the role fix above) |
+| State afterwards | 8 schools, 26 courses, 8 published lessons, 24 answer keys, 4 tasks, 6 achievements; **0 users, 0 XP rows**; pgTAP removed; no public table without RLS |
+| `db advisors --remote` | ✅ only the accepted `complete_lesson` warning |
 
 ## 2. Supabase sign-in settings (dashboard)
 
