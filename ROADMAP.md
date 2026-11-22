@@ -37,6 +37,10 @@ Each milestone ends with working, tested software and a development report in [d
 3. ✅ **Missions, objectives and achievements earned on the server** *(Checkpoint 3)*: every task and achievement has a rule the database verifies (lessons, modules, schools, XP, streaks); `evaluate_progress` runs in the same transaction as each completion and pays tasks once per period.
 4. *Moved to Milestone 4:* a service worker for offline reading, designed around real lesson data so offline mode never shows invented XP.
 
+## ✅ Hosting (phase 1: private)
+
+Live at **https://the-accent.vercel.app**: Next.js on Vercel, Supabase (US West), deployed from a private GitHub repository. Private to the owner; see `docs/DEPLOYMENT.md`. Phase 2 (opening it to others: custom domain, real email, privacy notice) is planned there in §6.
+
 ## Milestone 4 — Depth and reflection
 
 - Offline reading of lessons (service worker), moved from Milestone 3

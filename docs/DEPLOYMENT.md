@@ -107,6 +107,15 @@ In the Supabase dashboard → **Authentication**:
 - [ ] A short privacy notice: what's stored (email, display name, progress) and how to ask for deletion.
 - [ ] Backups: check the Supabase plan's backup policy.
 
+## Live deployment log
+
+| Date | Event | Result |
+|---|---|---|
+| 20 Nov 2026 | Hosted database built from scratch (US West) | ✅ 7 migrations + seed; 50/50 security tests; advisor: one accepted warning |
+| 21 Nov 2026 | First deploy to **https://the-accent.vercel.app** (Vercel, team POG, Hobby) | ✅ public pages, 404s, CSP/HSTS/security headers, no quiz answers in page source |
+| 21 Nov 2026 | Sign-in failed with Supabase's default email link | Fixed: `/auth/confirm` now also exchanges PKCE `code` links (commit 8a0f2c8) |
+| 22 Nov 2026 | Owner's first live sign-in | ✅ account created; profile created by the database trigger |
+
 ## Everyday operations
 
 | Task | How |

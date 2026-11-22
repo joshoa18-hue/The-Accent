@@ -1,5 +1,7 @@
 # The Ascent
 
+**Live (private):** https://the-accent.vercel.app
+
 A lifelong personal learning academy styled as an educational RPG. You study across **eight schools**, earn **XP** and level up a character, whose six attributes and per-school mastery grow with what you learn.
 
 > **Status: Milestone 2 — accounts and real data.** Learners sign in with an emailed link and see their **own** progress, stored in Supabase and protected by Row Level Security. Nothing in the app awards XP yet; that's Milestone 3. See [ROADMAP.md](ROADMAP.md).
