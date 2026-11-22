@@ -62,8 +62,7 @@ In the Supabase dashboard → **Authentication**:
 
 - [ ] **URL Configuration → Site URL:** the Vercel production address, e.g. `https://the-ascent.vercel.app`. Do this after step 3.4 if you don't know it yet. The email link is built from this address.
 - [ ] **URL Configuration → Redirect URLs:** add `https://<your-app>.vercel.app/auth/confirm`.
-- [ ] **Emails → Magic Link:** subject `Your sign-in link for The Ascent`; body = the contents of `supabase/templates/magic_link.html`.
-- [ ] **Emails → Confirm signup:** same subject and body.
+- [ ] **Email templates: leave them as Supabase's defaults.** Hosted projects can't edit templates until custom SMTP is set up (§6). The app handles the default email's link: Supabase verifies it, then sends the browser to `/auth/confirm?code=…`, and the app exchanges the code using the PKCE verifier cookie set when the email was requested. (Locally, our own template in `supabase/templates/` sends `token_hash` links instead; `/auth/confirm` accepts both.)
 - [ ] **Leave sign-ups on for now.** They're turned off in step 4, after you've created your own account.
 
 > **Email in phase 1:** Supabase's built-in email only sends to members of your Supabase team, and only a few per hour. That's enough while you're the only user. A real email service is part of §6.

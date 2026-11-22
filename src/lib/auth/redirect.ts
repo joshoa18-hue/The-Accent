@@ -11,6 +11,27 @@ import { routes } from "@/lib/routes";
  *
  * Only plain paths on THIS site are allowed, e.g. "/character".
  */
+/**
+ * Where the sign-in email should bring people back to: `<origin>/auth/confirm`.
+ *
+ * `origin` comes from the request's Origin header (the site the form was
+ * submitted from). Only a clean http(s) origin is accepted; anything else
+ * returns undefined, and Supabase then falls back to the project's Site URL.
+ * Supabase also checks the result against its Redirect URLs allow-list, so a
+ * forged header can't send a sign-in link to another website.
+ */
+export function signInCallbackUrl(origin: string | null | undefined): string | undefined {
+  if (!origin) return undefined;
+  try {
+    const url = new URL(origin);
+    if (url.protocol !== "https:" && url.protocol !== "http:") return undefined;
+    if (url.origin !== origin) return undefined; // no paths, queries or credentials
+    return `${url.origin}${routes.authConfirm()}`;
+  } catch {
+    return undefined;
+  }
+}
+
 export function safeNextPath(value: unknown, fallback: string = routes.dashboard()): string {
   if (typeof value !== "string" || value.length === 0 || value.length > 512) return fallback;
   // Must be a path on this site: one leading slash, not "//host" or "/\host".

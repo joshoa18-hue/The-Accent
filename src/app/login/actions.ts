@@ -1,9 +1,9 @@
 "use server";
 
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { checkEmail } from "@/lib/auth/email";
 import { RETURN_TO_COOKIE, RETURN_TO_MAX_AGE_SECONDS } from "@/lib/auth/constants";
-import { safeNextPath } from "@/lib/auth/redirect";
+import { safeNextPath, signInCallbackUrl } from "@/lib/auth/redirect";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 export type SignInState =
@@ -38,7 +38,11 @@ export async function sendSignInLink(_previous: SignInState, formData: FormData)
   const supabase = await createSupabaseServerClient();
   const { error } = await supabase.auth.signInWithOtp({
     email: checked.email,
-    options: { shouldCreateUser: true },
+    options: {
+      shouldCreateUser: true,
+      // Supabase's default email template links via Supabase back to here.
+      emailRedirectTo: signInCallbackUrl((await headers()).get("origin")),
+    },
   });
 
   if (error) {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { safeNextPath } from "./redirect";
+import { safeNextPath, signInCallbackUrl } from "./redirect";
 
 describe("safeNextPath", () => {
   it("allows plain paths on this site, keeping query and hash", () => {
@@ -31,5 +31,23 @@ describe("safeNextPath", () => {
 
   it("refuses absurdly long values", () => {
     expect(safeNextPath("/" + "a".repeat(600))).toBe("/");
+  });
+});
+
+describe("signInCallbackUrl", () => {
+  it("points the email back at /auth/confirm on the same site", () => {
+    expect(signInCallbackUrl("https://the-accent.vercel.app")).toBe("https://the-accent.vercel.app/auth/confirm");
+    expect(signInCallbackUrl("http://localhost:3000")).toBe("http://localhost:3000/auth/confirm");
+  });
+
+  it.each([
+    ["missing", null],
+    ["empty", ""],
+    ["not a URL", "not a url"],
+    ["another protocol", "javascript:alert(1)"],
+    ["a path smuggled in", "https://the-accent.vercel.app/evil"],
+    ["credentials", "https://user:pass@the-accent.vercel.app"],
+  ])("returns nothing for %s, so Supabase uses the Site URL", (_label, value) => {
+    expect(signInCallbackUrl(value)).toBeUndefined();
   });
 });
